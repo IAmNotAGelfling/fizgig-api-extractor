@@ -28,7 +28,6 @@ app = typer.Typer(
     no_args_is_help=True
 )
 
-import sys
 import os
 
 # Fix Windows console encoding for Unicode support
