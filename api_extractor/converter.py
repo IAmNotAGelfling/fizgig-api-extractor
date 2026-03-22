@@ -183,6 +183,24 @@ def openapi_request_body_to_postman(request_body: Dict[str, Any]) -> Dict[str, A
     return body
 
 
+def _generate_object_example(schema: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate example data for object schema type."""
+    properties = schema.get("properties", {})
+    example = {}
+    for prop_name, prop_schema in properties.items():
+        if isinstance(prop_schema, dict):
+            example[prop_name] = generate_example_from_schema(prop_schema)
+    return example
+
+
+def _generate_array_example(schema: Dict[str, Any]) -> List[Any]:
+    """Generate example data for array schema type."""
+    items = schema.get("items", {})
+    if isinstance(items, dict):
+        return [generate_example_from_schema(items)]
+    return []
+
+
 def generate_example_from_schema(schema: Dict[str, Any]) -> Any:
     """
     Generate example data from OpenAPI schema.
@@ -202,31 +220,19 @@ def generate_example_from_schema(schema: Dict[str, Any]) -> Any:
 
     schema_type = schema.get("type", "object")
 
-    if schema_type == "object":
-        properties = schema.get("properties", {})
-        example = {}
-        for prop_name, prop_schema in properties.items():
-            if isinstance(prop_schema, dict):
-                example[prop_name] = generate_example_from_schema(prop_schema)
-        return example
+    # Dispatch to type-specific generators
+    type_generators = {
+        "object": _generate_object_example,
+        "array": _generate_array_example,
+        "string": lambda s: s.get("default", "string"),
+        "number": lambda s: s.get("default", 0),
+        "integer": lambda s: s.get("default", 0),
+        "boolean": lambda s: s.get("default", False),
+    }
 
-    elif schema_type == "array":
-        items = schema.get("items", {})
-        if isinstance(items, dict):
-            return [generate_example_from_schema(items)]
-        return []
-
-    elif schema_type == "string":
-        return schema.get("default", "string")
-
-    elif schema_type == "number":
-        return schema.get("default", 0)
-
-    elif schema_type == "integer":
-        return schema.get("default", 0)
-
-    elif schema_type == "boolean":
-        return schema.get("default", False)
+    generator = type_generators.get(schema_type)
+    if generator:
+        return generator(schema)
 
     return None
 

@@ -140,7 +140,7 @@ def parse_postman_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def parse_postman_item(item: Dict[str, Any], parent_path: List[str] = None) -> List[Dict[str, Any]]:
+def parse_postman_item(item: Dict[str, Any], parent_path: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     """
     Parse a Postman collection item (folder or request).
 
@@ -148,7 +148,7 @@ def parse_postman_item(item: Dict[str, Any], parent_path: List[str] = None) -> L
 
     Args:
         item: Item from Postman collection
-        parent_path: List of parent folder names
+        parent_path: List of parent folder names (default: None, initialized to empty list)
 
     Returns:
         List of endpoint dictionaries

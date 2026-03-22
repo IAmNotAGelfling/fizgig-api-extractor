@@ -135,16 +135,23 @@ def load_api_file(file_path: str) -> Tuple[Dict[str, Any], FormatType]:
     elif suffix in ['.yaml', '.yml']:
         data = load_yaml(path)
     else:
-        # Try JSON first, then YAML
+        # Try JSON first, then YAML for files without standard extensions
+        json_error = None
+        yaml_error = None
+
         try:
             data = load_json(path)
-        except ValueError:
+        except ValueError as e:
+            json_error = str(e)
             try:
                 data = load_yaml(path)
-            except ValueError:
+            except ValueError as e:
+                yaml_error = str(e)
                 raise ValueError(
                     f"Could not parse {file_path} as JSON or YAML. "
-                    f"Supported extensions: .json, .yaml, .yml"
+                    f"Supported extensions: .json, .yaml, .yml\n"
+                    f"JSON parse error: {json_error}\n"
+                    f"YAML parse error: {yaml_error}"
                 )
 
     # Detect format

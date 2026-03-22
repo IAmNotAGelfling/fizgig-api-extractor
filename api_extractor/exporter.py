@@ -11,12 +11,25 @@ from typing import List, Dict, Any
 from pathlib import Path
 
 import mistune
+from mistune.renderers.html import HTMLRenderer
 
 from api_extractor.utils import group_by_tag, truncate_text
 
-# Create mistune markdown renderer for inline HTML conversion
+
+class CustomHTMLRenderer(HTMLRenderer):
+    """Custom HTML renderer that adds target='_blank' to links."""
+
+    def link(self, text: str, url: str, title: str = None) -> str:
+        """Render link with target='_blank' attribute."""
+        s = f'<a href="{self.safe_url(url)}" target="_blank"'
+        if title:
+            s += f' title="{mistune.escape_html(title)}"'
+        return s + f'>{text}</a>'
+
+
+# Create mistune markdown renderer with custom link handling
 markdown_renderer = mistune.create_markdown(
-    escape=False,
+    renderer=CustomHTMLRenderer(escape=True),
     plugins=['strikethrough', 'table']
 )
 
@@ -34,11 +47,8 @@ def markdown_to_html(text: str) -> str:
     if not text:
         return ""
 
-    # Render markdown to HTML
+    # Render markdown to HTML with custom renderer
     html = markdown_renderer(text)
-
-    # Make links open in new tab
-    html = re.sub(r'<a href="([^"]+)">', r'<a href="\1" target="_blank">', html)
 
     return html.strip()
 
