@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pytest:*)",
+      "Bash(git add:*)",
+      "Bash(api-extractor extract:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)"
+    ]
+  }
+}

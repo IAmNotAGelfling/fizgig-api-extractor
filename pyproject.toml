@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fizgig-api-extractor"
+version = "1.0.0"
+description = "Parse Postman collections and OpenAPI specs, extract endpoints, and export in multiple formats"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "IAmNotAGelfling"}
+]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "pyyaml>=6.0",
+    "mistune>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+fizgig-api-extractor = "api_extractor.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/IAmNotAGelfling/fizgig-api-extractor"
+Issues = "https://github.com/IAmNotAGelfling/fizgig-api-extractor/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["api_extractor*"]
