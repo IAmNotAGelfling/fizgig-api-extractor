@@ -86,6 +86,11 @@ def extract(
         "--pretty",
         "-p",
         help="Pretty print tree to console (default action if no output file)"
+    ),
+    plain_text: bool = typer.Option(
+        False,
+        "--plain-text",
+        help="Convert markdown descriptions to plain text (JSON format only)"
     )
 ) -> None:
     """
@@ -104,6 +109,9 @@ def extract(
 
         # Export to JSON
         fizgig-api-extractor extract collection.json -o endpoints.json -f json
+
+        # Export to JSON with plain text descriptions (no markdown)
+        fizgig-api-extractor extract collection.json -o endpoints.json -f json --plain-text
 
         # Export to HTML
         fizgig-api-extractor extract api.yaml -o endpoints.html -f html
@@ -140,7 +148,7 @@ def extract(
         elif format_lower == "csv":
             export_csv(endpoints, output_file)
         elif format_lower == "json":
-            export_json(endpoints, output_file)
+            export_json(endpoints, output_file, plain_text=plain_text)
         elif format_lower == "html":
             export_html(endpoints, output_file)
         else:
