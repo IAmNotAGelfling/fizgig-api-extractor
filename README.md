@@ -18,8 +18,8 @@ Parse Postman collections and OpenAPI specifications, extract API endpoints, and
 
 - **Export to multiple formats**
   - **Markdown** - Human-readable documentation
-  - **CSV** - Spreadsheet-compatible format
-  - **JSON** - Machine-readable structured data
+  - **CSV** - Spreadsheet-compatible format (markdown converted to plain text)
+  - **JSON** - Machine-readable structured data (with optional plain text conversion)
   - **HTML** - Styled web page with interactive display
 
 - **Convert between formats**
@@ -72,6 +72,9 @@ fizgig-api-extractor extract openapi.yaml -o endpoints.csv -f csv
 # Export to JSON
 fizgig-api-extractor extract collection.json -o endpoints.json -f json
 
+# Export to JSON with plain text descriptions (no markdown)
+fizgig-api-extractor extract collection.json -o endpoints.json -f json --plain-text
+
 # Export to HTML
 fizgig-api-extractor extract api.yaml -o endpoints.html -f html
 ```
@@ -95,6 +98,20 @@ Convert OpenAPI specifications to Postman collections:
 ```bash
 fizgig-api-extractor convert openapi.yaml collection.json
 ```
+
+#### Plain Text Descriptions
+
+By default, OpenAPI and Postman descriptions may contain markdown formatting (bold, links, code blocks). When exporting to JSON, you can use `--plain-text` to strip all markdown and output plain text:
+
+```bash
+# JSON with markdown (default)
+fizgig-api-extractor extract api.json -o endpoints.json -f json
+
+# JSON with plain text descriptions
+fizgig-api-extractor extract api.json -o endpoints.json -f json --plain-text
+```
+
+**Note:** CSV format always outputs plain text descriptions by default.
 
 ### Python API
 

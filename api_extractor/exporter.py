@@ -234,7 +234,7 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str) -> None:
             ])
 
 
-def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool = True) -> None:
+def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool = True, plain_text: bool = False) -> None:
     """
     Export endpoints to JSON format.
 
@@ -242,12 +242,31 @@ def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool 
         endpoints: List of endpoint dictionaries
         output_path: Output file path
         pretty: Whether to pretty-print JSON (default: True)
+        plain_text: Whether to convert markdown descriptions to plain text (default: False)
 
     Example:
         >>> export_json(endpoints, "api_endpoints.json")
+        >>> export_json(endpoints, "api_endpoints.json", plain_text=True)
     """
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # If plain_text is requested, strip markdown from descriptions
+    if plain_text:
+        endpoints = [
+            {
+                **endpoint,
+                "description": markdown_to_plain_text(endpoint.get("description", "")),
+                "params": [
+                    {
+                        **param,
+                        "description": markdown_to_plain_text(param.get("description", ""))
+                    }
+                    for param in endpoint.get("params", [])
+                ]
+            }
+            for endpoint in endpoints
+        ]
 
     with open(output_file, 'w', encoding='utf-8') as f:
         if pretty:
