@@ -434,15 +434,16 @@ def export_json(endpoints: List[Dict[str, Any]], output_path: str,
 
 ### Template Engine
 
-Use **`pystache`** or **`chevron`** library:
+Use **`chevron`** library:
 - Simple Mustache implementation
 - Logic-less templates
 - No complex helpers needed
 - Lightweight
+- Pure Python, no dependencies
 
 Add to `requirements.txt`:
 ```
-pystache>=0.6.5
+chevron>=0.14.0
 ```
 
 ### Template Data Structure
@@ -582,7 +583,7 @@ Convert current `export_html()` output to Mustache template:
 #### Templating Module (`templating.py`)
 
 ```python
-import pystache
+import chevron
 from pathlib import Path
 from typing import Dict, Any, List
 from datetime import datetime
@@ -724,26 +725,28 @@ When run without flags, exports:
 
 ### Example Config Content
 
+**Note:** The example below uses JSON comments for illustration. The actual exported config will use field names like `"_comment"` since standard JSON doesn't support comments.
+
 ```json
 {
-  "// Description": "Example configuration for fizgig-api-extractor",
-  "// Documentation": "https://github.com/IAmNotAGelfling/fizgig-api-extractor",
+  "_description": "Example configuration for fizgig-api-extractor",
+  "_documentation": "https://github.com/IAmNotAGelfling/fizgig-api-extractor",
 
   "input": "api.json",
 
-  "// headers": "Optional: Custom HTTP headers for URL inputs",
+  "_comment_headers": "Optional: Custom HTTP headers for URL inputs",
   "headers": {
     "Authorization": "Bearer YOUR_TOKEN_HERE"
   },
 
   "exports": [
     {
-      "// Export 1": "Markdown documentation",
+      "_comment": "Export 1: Markdown documentation",
       "format": "markdown",
       "output": "API.md"
     },
     {
-      "// Export 2": "JSON with custom fields",
+      "_comment": "Export 2: JSON with custom fields",
       "format": "json",
       "output": "api-summary.json",
       "plain_text": true,
@@ -755,12 +758,12 @@ When run without flags, exports:
       }
     },
     {
-      "// Export 3": "CSV with all fields",
+      "_comment": "Export 3: CSV with all fields",
       "format": "csv",
       "output": "api-endpoints.csv"
     },
     {
-      "// Export 4": "HTML with custom template",
+      "_comment": "Export 4: HTML with custom template",
       "format": "html",
       "output": "api.html",
       "template": "templates/default.html"
@@ -832,6 +835,8 @@ def init(
 - Provide clear error messages for invalid configs
 - Check that referenced files (templates, input) exist
 - Useful for CI/CD and development workflows
+
+**Note:** Config validation runs automatically when loading any config file, so this command provides the same validation but exits early without processing data. Useful for quick feedback during development or CI/CD pipelines.
 
 ### Command Syntax
 
@@ -1023,11 +1028,12 @@ fizgig-api-extractor extract $API_SPEC
 ### Unit Tests
 
 **`test_fetcher.py`:**
-- Mock HTTP requests with `responses` library
+- Mock HTTP requests with `responses` library (no real test server needed)
 - Test successful fetch (JSON, YAML)
 - Test error cases (404, timeout, invalid content)
 - Test header injection
 - Test save functionality
+- Add `responses>=0.24.0` to test dependencies
 
 **`test_config.py`:**
 - Test config loading and validation
@@ -1053,7 +1059,7 @@ fizgig-api-extractor extract $API_SPEC
 
 **`test_url_integration.py`:**
 - End-to-end URL fetch and parse
-- Test with real test server (or mock)
+- Use `responses` library to mock HTTP endpoints
 
 **`test_config_integration.py`:**
 - Test full config-based workflow
@@ -1117,7 +1123,7 @@ Create `docs/` directory with:
 Add to `requirements.txt`:
 ```
 requests>=2.31.0
-pystache>=0.6.5
+chevron>=0.14.0
 ```
 
 Add to `setup.py`:
@@ -1128,7 +1134,7 @@ install_requires=[
     'pyyaml>=6.0',
     'mistune>=3.0.0',
     'requests>=2.31.0',
-    'pystache>=0.6.5',
+    'chevron>=0.14.0',
 ],
 ```
 
@@ -1141,7 +1147,13 @@ install_requires=[
 - [ ] Write tests
 - [ ] Update documentation
 
-### Phase 2: HTML Templating
+### Phase 2: Field Mapping
+- [ ] Create `field_mapper.py` module
+- [ ] Integrate with CSV/JSON exporters
+- [ ] Write tests
+- [ ] Update documentation
+
+### Phase 3: HTML Templating
 - [ ] Create `templating.py` module
 - [ ] Create default template resource
 - [ ] Modify `exporter.py` to use templating
@@ -1149,18 +1161,13 @@ install_requires=[
 - [ ] Write tests
 - [ ] Update documentation
 
-### Phase 3: Field Mapping
-- [ ] Create `field_mapper.py` module
-- [ ] Integrate with CSV/JSON exporters
-- [ ] Write tests
-- [ ] Update documentation
-
 ### Phase 4: Config System
 - [ ] Create `config.py` module
-- [ ] Implement auto-discovery and validation
+- [ ] Implement auto-discovery and validation (basic schema only at this stage)
 - [ ] Integrate with CLI
 - [ ] Write tests
 - [ ] Update documentation
+- [ ] Note: Template path validation added after Phase 3 completes
 
 ### Phase 5: Init Command
 - [ ] Implement init command in `cli.py`
@@ -1186,7 +1193,7 @@ install_requires=[
 ### URL Fetching
 - Validate URL schemes (only http/https)
 - Set reasonable timeout (30s default)
-- Limit response size (e.g., 10MB max)
+- Limit response size to 10MB maximum
 - No automatic redirects to file:// or other schemes
 - Headers should not be logged in normal output
 
