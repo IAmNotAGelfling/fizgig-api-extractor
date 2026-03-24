@@ -574,7 +574,7 @@ def validate_config(
             return
 
         # Display validation errors
-        console.print(f"[red]✗[/red] Validation failed\n")
+        console.print("[red]✗[/red] Validation failed\n")
         for error in validation_result["errors"]:
             console_err.print(f"[red]●[/red] {error['path']}")
             console_err.print(f"  {error['message']}")

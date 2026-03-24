@@ -4,9 +4,9 @@ OpenAPI specification parser for fizgig-api-extractor.
 Parses OpenAPI 3.x specifications (JSON and YAML) and extracts endpoint information.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
-from api_extractor.utils import safe_get, format_method, normalise_url, ensure_list
+from api_extractor.utils import format_method, normalise_url, ensure_list
 
 
 def resolve_server_url(servers: List[Dict[str, Any]]) -> str:

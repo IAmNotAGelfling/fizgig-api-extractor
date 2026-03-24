@@ -2,7 +2,6 @@
 Tests for utility functions.
 """
 
-import pytest
 
 from api_extractor.utils import (
     safe_get,

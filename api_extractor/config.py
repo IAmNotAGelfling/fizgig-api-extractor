@@ -6,7 +6,7 @@ Handles loading, validating, and executing config-based exports.
 
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 
 class ConfigError(Exception):
@@ -196,7 +196,7 @@ def validate_config_deep(config: Dict[str, Any], config_dir: Path) -> Dict[str, 
                 errors.append({
                     "path": f"exports[{idx}].template",
                     "message": f"Template file not found: {template_path}",
-                    "suggestion": f"Searched in:\n    " + "\n    ".join(tried_paths)
+                    "suggestion": "Searched in:\n    " + "\n    ".join(tried_paths)
                 })
 
     return {

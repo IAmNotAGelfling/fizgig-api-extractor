@@ -5,7 +5,7 @@ Provides general-purpose helper functions used throughout the package.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 
 def safe_get(data: Any, *keys: str, default: Any = None) -> Any:

@@ -13,7 +13,7 @@ from pathlib import Path
 import mistune
 from mistune.renderers.html import HTMLRenderer
 
-from api_extractor.utils import group_by_tag, truncate_text
+from api_extractor.utils import group_by_tag
 
 
 class CustomHTMLRenderer(HTMLRenderer):

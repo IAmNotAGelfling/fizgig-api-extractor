@@ -4,7 +4,6 @@ Tests for OpenAPI specification parser.
 
 from pathlib import Path
 
-import pytest
 import yaml
 
 from api_extractor.parser_openapi import (

@@ -2,9 +2,6 @@
 Tests for treeview.py to achieve 90%+ coverage.
 """
 
-import pytest
-from io import StringIO
-from rich.console import Console
 
 from api_extractor.treeview import get_method_style, display_tree
 

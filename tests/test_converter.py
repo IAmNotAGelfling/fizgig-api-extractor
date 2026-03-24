@@ -2,7 +2,6 @@
 Tests for format conversion.
 """
 
-import pytest
 
 from api_extractor.converter import (
     openapi_path_to_postman,

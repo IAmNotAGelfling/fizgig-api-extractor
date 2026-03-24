@@ -6,7 +6,7 @@ Parses Postman v2.1 collection files and extracts endpoint information.
 
 from typing import Dict, Any, List, Optional
 
-from api_extractor.utils import safe_get, format_method, extract_path_params, ensure_list
+from api_extractor.utils import format_method, extract_path_params, ensure_list
 
 
 def parse_postman_url(url_data: Any) -> Dict[str, Any]:

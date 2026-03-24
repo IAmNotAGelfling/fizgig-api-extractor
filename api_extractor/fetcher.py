@@ -123,7 +123,7 @@ def load_from_url(url: str, headers: Optional[Dict[str, str]] = None,
     Raises:
         ValueError: On fetch or parse errors
     """
-    from api_extractor.loader import detect_format, load_json, load_yaml
+    from api_extractor.loader import detect_format
 
     # Fetch content
     content, detected_format = fetch_from_url(url, headers)
@@ -143,8 +143,8 @@ def load_from_url(url: str, headers: Optional[Dict[str, str]] = None,
 
     if format_type == "unknown":
         raise ValueError(
-            f"Could not detect format of URL content. "
-            f"Expected a Postman v2.1 collection or OpenAPI 3.x specification."
+            "Could not detect format of URL content. "
+            "Expected a Postman v2.1 collection or OpenAPI 3.x specification."
         )
 
     return data, format_type

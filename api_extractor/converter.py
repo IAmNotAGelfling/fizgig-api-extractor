@@ -6,9 +6,8 @@ Converts between API specification formats, primarily OpenAPI → Postman.
 
 import uuid
 from typing import Dict, Any, List
-from datetime import datetime
 
-from api_extractor.utils import safe_get, ensure_list
+from api_extractor.utils import ensure_list
 
 
 def generate_postman_id() -> str:
@@ -85,7 +84,6 @@ def openapi_parameter_to_postman(param: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Postman parameter object
     """
-    param_in = param.get("in", "query")
 
     postman_param = {
         "key": param.get("name", ""),
@@ -326,7 +324,6 @@ def openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
     info = openapi_data.get("info", {})
     api_title = info.get("title", "API")
     api_description = info.get("description", "")
-    api_version = info.get("version", "1.0.0")
 
     # Resolve base URL
     servers = ensure_list(openapi_data.get("servers", []))

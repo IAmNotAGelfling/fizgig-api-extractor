@@ -5,7 +5,6 @@ Tests for Postman collection parser.
 import json
 from pathlib import Path
 
-import pytest
 
 from api_extractor.parser_postman import (
     parse_postman_url,

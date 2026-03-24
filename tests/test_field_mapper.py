@@ -2,7 +2,6 @@
 Tests for field mapping functionality.
 """
 
-import pytest
 from api_extractor.field_mapper import apply_field_mapping, get_nested_field
 
 
