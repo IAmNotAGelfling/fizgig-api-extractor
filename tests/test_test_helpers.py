@@ -4,7 +4,11 @@ Tests for test helper utilities.
 
 import pytest
 
-from tests.test_helpers import normalize_rich_output, assert_in_output, assert_all_in_output
+from tests.test_helpers import (
+    normalize_rich_output,
+    assert_in_output,
+    assert_all_in_output,
+)
 
 
 class TestNormalizeRichOutput:

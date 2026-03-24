@@ -25,7 +25,7 @@ class TestFetchFromUrl:
             url,
             json=content,
             status=200,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
 
         # Act
@@ -46,7 +46,7 @@ class TestFetchFromUrl:
             url,
             body=yaml_content,
             status=200,
-            headers={"Content-Type": "application/yaml"}
+            headers={"Content-Type": "application/yaml"},
         )
 
         # Act
@@ -105,7 +105,7 @@ class TestFetchFromUrl:
             url,
             body="not valid json{",
             status=200,
-            headers={"Content-Type": "application/json"}
+            headers={"Content-Type": "application/json"},
         )
 
         # Act & Assert
@@ -131,7 +131,7 @@ class TestSaveUrlContent:
             # Assert
             assert result_path == save_path
             assert Path(save_path).exists()
-            with open(save_path, 'r') as f:
+            with open(save_path, "r") as f:
                 assert f.read() == content
 
     def test_save_derives_filename_from_url(self):
@@ -143,6 +143,7 @@ class TestSaveUrlContent:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Change to temp directory
             import os
+
             old_cwd = os.getcwd()
             os.chdir(tmpdir)
 
@@ -168,7 +169,7 @@ class TestLoadFromUrl:
         spec = {
             "openapi": "3.0.0",
             "info": {"title": "Test API", "version": "1.0.0"},
-            "paths": {}
+            "paths": {},
         }
         responses.add(responses.GET, url, json=spec, status=200)
 
@@ -187,9 +188,9 @@ class TestLoadFromUrl:
         collection = {
             "info": {
                 "name": "Test Collection",
-                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
             },
-            "item": []
+            "item": [],
         }
         responses.add(responses.GET, url, json=collection, status=200)
 
@@ -217,7 +218,7 @@ class TestLoadFromUrl:
             # Assert
             assert format_type == "openapi"
             assert Path(save_path).exists()
-            with open(save_path, 'r') as f:
+            with open(save_path, "r") as f:
                 saved_data = json.load(f)
                 assert saved_data["openapi"] == "3.0.0"
 
@@ -231,12 +232,7 @@ class TestFetcherErrorPaths:
         # Arrange - URL ends with .yaml but no content-type header
         url = "https://api.example.com/spec.yaml"
         yaml_content = "openapi: '3.0.0'\npaths: {}"
-        responses.add(
-            responses.GET,
-            url,
-            body=yaml_content,
-            status=200
-        )
+        responses.add(responses.GET, url, body=yaml_content, status=200)
 
         # Act
         content, detected_format = fetch_from_url(url)
@@ -250,12 +246,7 @@ class TestFetcherErrorPaths:
         # Arrange
         url = "https://api.example.com/spec.yml"
         yaml_content = "openapi: '3.0.0'\npaths: {}"
-        responses.add(
-            responses.GET,
-            url,
-            body=yaml_content,
-            status=200
-        )
+        responses.add(responses.GET, url, body=yaml_content, status=200)
 
         # Act
         content, detected_format = fetch_from_url(url)
@@ -269,12 +260,7 @@ class TestFetcherErrorPaths:
         # Arrange - No .yaml/.yml extension, no content-type
         url = "https://api.example.com/spec"
         json_content = '{"openapi": "3.0.0"}'
-        responses.add(
-            responses.GET,
-            url,
-            body=json_content,
-            status=200
-        )
+        responses.add(responses.GET, url, body=json_content, status=200)
 
         # Act
         content, detected_format = fetch_from_url(url)
@@ -293,7 +279,7 @@ class TestFetcherErrorPaths:
             url,
             body=invalid_yaml,
             status=200,
-            headers={"Content-Type": "application/yaml"}
+            headers={"Content-Type": "application/yaml"},
         )
 
         # Act & Assert
@@ -305,16 +291,13 @@ class TestFetcherErrorPaths:
         """Test fetch with timeout error."""
         # Arrange
         url = "https://api.example.com/spec.json"
-        
+
         def timeout_callback(request):
             import requests
+
             raise requests.Timeout("Request timed out")
-        
-        responses.add_callback(
-            responses.GET,
-            url,
-            callback=timeout_callback
-        )
+
+        responses.add_callback(responses.GET, url, callback=timeout_callback)
 
         # Act & Assert
         with pytest.raises(ValueError, match="Request timed out"):
@@ -325,16 +308,13 @@ class TestFetcherErrorPaths:
         """Test fetch with generic request exception."""
         # Arrange
         url = "https://api.example.com/spec.json"
-        
+
         def exception_callback(request):
             import requests
+
             raise requests.RequestException("Network error")
-        
-        responses.add_callback(
-            responses.GET,
-            url,
-            callback=exception_callback
-        )
+
+        responses.add_callback(responses.GET, url, callback=exception_callback)
 
         # Act & Assert
         with pytest.raises(ValueError, match="Failed to fetch URL"):
@@ -345,16 +325,17 @@ class TestFetcherErrorPaths:
         # Arrange
         content = '{"test": "data"}'
         url = "https://api.example.com/data.json"
-        
+
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
+
             old_cwd = os.getcwd()
             os.chdir(tmpdir)
-            
+
             try:
                 # Act - save_path=None triggers filename derivation from URL
                 result_path = save_url_content(content, None, url)
-                
+
                 # Assert
                 assert Path(result_path).exists()
                 assert "data.json" in result_path

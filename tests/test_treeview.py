@@ -2,7 +2,6 @@
 Tests for treeview.py to achieve 90%+ coverage.
 """
 
-
 from api_extractor.treeview import get_method_style, display_tree
 
 
@@ -41,10 +40,10 @@ class TestDisplayTree:
                 "method": "GET",
                 "path": "/users",
                 "description": "Get all users",
-                "params": []
+                "params": [],
             }
         ]
-        
+
         # Should not raise
         display_tree(endpoints)
 
@@ -58,9 +57,7 @@ class TestDisplayTree:
                 "path": "/old-users",
                 "description": "Deprecated endpoint",
                 "params": [],
-                "metadata": {
-                    "deprecated": True
-                }
+                "metadata": {"deprecated": True},
             },
             {
                 "group": "Users",
@@ -69,12 +66,10 @@ class TestDisplayTree:
                 "path": "/users",
                 "description": "Current endpoint",
                 "params": [],
-                "metadata": {
-                    "deprecated": False
-                }
-            }
+                "metadata": {"deprecated": False},
+            },
         ]
-        
+
         # Should not raise
         display_tree(endpoints)
 
@@ -93,19 +88,19 @@ class TestDisplayTree:
                         "in": "path",
                         "type": "string",
                         "required": True,
-                        "description": "User ID"
+                        "description": "User ID",
                     },
                     {
                         "name": "fields",
                         "in": "query",
                         "type": "string",
                         "required": False,
-                        "description": "Fields to return"
-                    }
-                ]
+                        "description": "Fields to return",
+                    },
+                ],
             }
         ]
-        
+
         # Should not raise and show params
         display_tree(endpoints, show_params=True)
 
@@ -124,12 +119,12 @@ class TestDisplayTree:
                         "in": "path",
                         "type": "string",
                         "required": True,
-                        "description": "User ID"
+                        "description": "User ID",
                     }
-                ]
+                ],
             }
         ]
-        
+
         # Should not raise
         display_tree(endpoints, show_params=True)
 
@@ -148,19 +143,19 @@ class TestDisplayTree:
                         "in": "query",
                         "type": "string",
                         "required": True,
-                        "description": "Search query"
+                        "description": "Search query",
                     },
                     {
                         "name": "limit",
                         "in": "query",
                         "type": "integer",
                         "required": False,
-                        "description": "Result limit"
-                    }
-                ]
+                        "description": "Result limit",
+                    },
+                ],
             }
         ]
-        
+
         # Should show both required and optional params differently
         display_tree(endpoints, show_params=True)
 
@@ -179,12 +174,12 @@ class TestDisplayTree:
                         "in": "path",
                         "type": "string",
                         "required": True,
-                        "description": ""  # No description
+                        "description": "",  # No description
                     }
-                ]
+                ],
             }
         ]
-        
+
         # Should handle param without description
         display_tree(endpoints, show_params=True)
 
@@ -197,7 +192,7 @@ class TestDisplayTree:
                 "method": "GET",
                 "path": "/users",
                 "description": "List users",
-                "params": []
+                "params": [],
             },
             {
                 "group": "Posts",
@@ -205,25 +200,74 @@ class TestDisplayTree:
                 "method": "GET",
                 "path": "/posts",
                 "description": "List posts",
-                "params": []
-            }
+                "params": [],
+            },
         ]
-        
+
         # Should show multiple groups
         display_tree(endpoints)
 
     def test_display_tree_all_http_methods(self):
         """Test tree display with all HTTP methods."""
         endpoints = [
-            {"group": "API", "name": "Get", "method": "GET", "path": "/", "description": "", "params": []},
-            {"group": "API", "name": "Post", "method": "POST", "path": "/", "description": "", "params": []},
-            {"group": "API", "name": "Put", "method": "PUT", "path": "/", "description": "", "params": []},
-            {"group": "API", "name": "Patch", "method": "PATCH", "path": "/", "description": "", "params": []},
-            {"group": "API", "name": "Delete", "method": "DELETE", "path": "/", "description": "", "params": []},
-            {"group": "API", "name": "Head", "method": "HEAD", "path": "/", "description": "", "params": []},
-            {"group": "API", "name": "Options", "method": "OPTIONS", "path": "/", "description": "", "params": []},
+            {
+                "group": "API",
+                "name": "Get",
+                "method": "GET",
+                "path": "/",
+                "description": "",
+                "params": [],
+            },
+            {
+                "group": "API",
+                "name": "Post",
+                "method": "POST",
+                "path": "/",
+                "description": "",
+                "params": [],
+            },
+            {
+                "group": "API",
+                "name": "Put",
+                "method": "PUT",
+                "path": "/",
+                "description": "",
+                "params": [],
+            },
+            {
+                "group": "API",
+                "name": "Patch",
+                "method": "PATCH",
+                "path": "/",
+                "description": "",
+                "params": [],
+            },
+            {
+                "group": "API",
+                "name": "Delete",
+                "method": "DELETE",
+                "path": "/",
+                "description": "",
+                "params": [],
+            },
+            {
+                "group": "API",
+                "name": "Head",
+                "method": "HEAD",
+                "path": "/",
+                "description": "",
+                "params": [],
+            },
+            {
+                "group": "API",
+                "name": "Options",
+                "method": "OPTIONS",
+                "path": "/",
+                "description": "",
+                "params": [],
+            },
         ]
-        
+
         # Should show all methods with proper colors
         display_tree(endpoints)
 
@@ -236,10 +280,10 @@ class TestDisplayTree:
                 "method": "GET",
                 "path": "/test",
                 "description": "Test",
-                "params": []
+                "params": [],
             }
         ]
-        
+
         # Should not duplicate name when it matches method
         display_tree(endpoints)
 
@@ -258,32 +302,32 @@ class TestDisplayTree:
                         "in": "body",
                         "type": "string",
                         "required": True,
-                        "description": "Unique username for the account"
+                        "description": "Unique username for the account",
                     },
                     {
                         "name": "email",
                         "in": "body",
                         "type": "string",
                         "required": True,
-                        "description": "Email address"
+                        "description": "Email address",
                     },
                     {
                         "name": "name",
                         "in": "body",
                         "type": "string",
                         "required": False,
-                        "description": "Full name of the user"
-                    }
-                ]
+                        "description": "Full name of the user",
+                    },
+                ],
             }
         ]
-        
+
         # Should show description AND all parameters
         display_tree(endpoints, show_params=True)
 
     def test_display_tree_empty_endpoints(self):
         """Test tree display with no endpoints."""
         endpoints = []
-        
+
         # Should handle empty list gracefully
         display_tree(endpoints)

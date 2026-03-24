@@ -22,12 +22,7 @@ class TestGetNestedField:
     def test_get_nested_field(self):
         """Test getting nested field."""
         # Arrange
-        obj = {
-            "metadata": {
-                "deprecated": True,
-                "version": "1.0"
-            }
-        }
+        obj = {"metadata": {"deprecated": True, "version": "1.0"}}
 
         # Act
         result = get_nested_field(obj, "metadata.deprecated")
@@ -38,15 +33,7 @@ class TestGetNestedField:
     def test_get_deeply_nested_field(self):
         """Test getting deeply nested field."""
         # Arrange
-        obj = {
-            "data": {
-                "user": {
-                    "profile": {
-                        "name": "John"
-                    }
-                }
-            }
-        }
+        obj = {"data": {"user": {"profile": {"name": "John"}}}}
 
         # Act
         result = get_nested_field(obj, "data.user.profile.name")
@@ -85,7 +72,7 @@ class TestApplyFieldMapping:
         # Arrange
         endpoints = [
             {"method": "GET", "path": "/users", "name": "List users"},
-            {"method": "POST", "path": "/users", "name": "Create user"}
+            {"method": "POST", "path": "/users", "name": "Create user"},
         ]
 
         # Act
@@ -97,9 +84,7 @@ class TestApplyFieldMapping:
     def test_empty_mapping_returns_unchanged(self):
         """Test that empty mapping returns data unchanged."""
         # Arrange
-        endpoints = [
-            {"method": "GET", "path": "/users", "name": "List users"}
-        ]
+        endpoints = [{"method": "GET", "path": "/users", "name": "List users"}]
 
         # Act
         result = apply_field_mapping(endpoints, {})
@@ -115,35 +100,23 @@ class TestApplyFieldMapping:
                 "method": "GET",
                 "path": "/users",
                 "name": "List users",
-                "description": "Get all users"
+                "description": "Get all users",
             }
         ]
-        field_map = {
-            "method": "HTTP Method",
-            "path": "Endpoint"
-        }
+        field_map = {"method": "HTTP Method", "path": "Endpoint"}
 
         # Act
         result = apply_field_mapping(endpoints, field_map)
 
         # Assert
         assert len(result) == 1
-        assert result[0] == {
-            "HTTP Method": "GET",
-            "Endpoint": "/users"
-        }
+        assert result[0] == {"HTTP Method": "GET", "Endpoint": "/users"}
 
     def test_preserve_field_order(self):
         """Test that field order matches mapping order."""
         # Arrange
-        endpoints = [
-            {"method": "GET", "path": "/users", "name": "List users"}
-        ]
-        field_map = {
-            "name": "Name",
-            "method": "Method",
-            "path": "Path"
-        }
+        endpoints = [{"method": "GET", "path": "/users", "name": "List users"}]
+        field_map = {"name": "Name", "method": "Method", "path": "Path"}
 
         # Act
         result = apply_field_mapping(endpoints, field_map)
@@ -159,45 +132,28 @@ class TestApplyFieldMapping:
             {
                 "method": "GET",
                 "path": "/users",
-                "metadata": {
-                    "deprecated": True,
-                    "version": "1.0"
-                }
+                "metadata": {"deprecated": True, "version": "1.0"},
             }
         ]
-        field_map = {
-            "method": "Method",
-            "metadata.deprecated": "Deprecated"
-        }
+        field_map = {"method": "Method", "metadata.deprecated": "Deprecated"}
 
         # Act
         result = apply_field_mapping(endpoints, field_map)
 
         # Assert
-        assert result[0] == {
-            "Method": "GET",
-            "Deprecated": True
-        }
+        assert result[0] == {"Method": "GET", "Deprecated": True}
 
     def test_missing_field_returns_none(self):
         """Test that missing fields are included as None."""
         # Arrange
-        endpoints = [
-            {"method": "GET", "path": "/users"}
-        ]
-        field_map = {
-            "method": "Method",
-            "missing": "Missing Field"
-        }
+        endpoints = [{"method": "GET", "path": "/users"}]
+        field_map = {"method": "Method", "missing": "Missing Field"}
 
         # Act
         result = apply_field_mapping(endpoints, field_map)
 
         # Assert
-        assert result[0] == {
-            "Method": "GET",
-            "Missing Field": None
-        }
+        assert result[0] == {"Method": "GET", "Missing Field": None}
 
     def test_map_multiple_endpoints(self):
         """Test mapping multiple endpoints."""
@@ -205,12 +161,9 @@ class TestApplyFieldMapping:
         endpoints = [
             {"method": "GET", "path": "/users", "name": "List"},
             {"method": "POST", "path": "/users", "name": "Create"},
-            {"method": "DELETE", "path": "/users/{id}", "name": "Delete"}
+            {"method": "DELETE", "path": "/users/{id}", "name": "Delete"},
         ]
-        field_map = {
-            "method": "HTTP Method",
-            "name": "Name"
-        }
+        field_map = {"method": "HTTP Method", "name": "Name"}
 
         # Act
         result = apply_field_mapping(endpoints, field_map)
@@ -224,13 +177,8 @@ class TestApplyFieldMapping:
     def test_keep_original_name_if_mapping_value_empty(self):
         """Test that empty string in mapping keeps original field name."""
         # Arrange
-        endpoints = [
-            {"method": "GET", "path": "/users"}
-        ]
-        field_map = {
-            "method": "method",
-            "path": "path"
-        }
+        endpoints = [{"method": "GET", "path": "/users"}]
+        field_map = {"method": "method", "path": "path"}
 
         # Act
         result = apply_field_mapping(endpoints, field_map)

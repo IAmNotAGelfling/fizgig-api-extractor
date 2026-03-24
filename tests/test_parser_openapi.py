@@ -29,9 +29,7 @@ class TestResolveServerUrl:
         servers = [
             {
                 "url": "https://{environment}.example.com",
-                "variables": {
-                    "environment": {"default": "api"}
-                }
+                "variables": {"environment": {"default": "api"}},
             }
         ]
         assert resolve_server_url(servers) == "https://api.example.com"
@@ -44,7 +42,7 @@ class TestResolveServerUrl:
         """Test that first server is used."""
         servers = [
             {"url": "https://api1.example.com"},
-            {"url": "https://api2.example.com"}
+            {"url": "https://api2.example.com"},
         ]
         assert resolve_server_url(servers) == "https://api1.example.com"
 
@@ -59,7 +57,7 @@ class TestParseOpenapiParameter:
             "in": "query",
             "required": False,
             "schema": {"type": "integer"},
-            "description": "Page number"
+            "description": "Page number",
         }
         result = parse_openapi_parameter(param)
         assert result["name"] == "page"
@@ -73,7 +71,7 @@ class TestParseOpenapiParameter:
             "name": "id",
             "in": "path",
             "required": True,
-            "schema": {"type": "string"}
+            "schema": {"type": "string"},
         }
         result = parse_openapi_parameter(param)
         assert result["name"] == "id"
@@ -95,11 +93,11 @@ class TestParseOpenapiRequestBody:
                         "required": ["name"],
                         "properties": {
                             "name": {"type": "string"},
-                            "age": {"type": "integer"}
-                        }
+                            "age": {"type": "integer"},
+                        },
                     }
                 }
-            }
+            },
         }
         params = parse_openapi_request_body(request_body)
         assert len(params) == 2
@@ -127,7 +125,7 @@ class TestParseOpenapiResponses:
             "200": {"description": "Success"},
             "400": {"description": "Bad Request"},
             "404": {"description": "Not Found"},
-            "default": {"description": "Error"}
+            "default": {"description": "Error"},
         }
         codes = parse_openapi_responses(responses)
         assert "200" in codes
@@ -146,9 +144,11 @@ class TestParseOpenapiOperation:
             "operationId": "listUsers",
             "tags": ["Users"],
             "parameters": [],
-            "responses": {"200": {"description": "Success"}}
+            "responses": {"200": {"description": "Success"}},
         }
-        result = parse_openapi_operation("/users", "get", operation, "https://api.example.com")
+        result = parse_openapi_operation(
+            "/users", "get", operation, "https://api.example.com"
+        )
         assert result["name"] == "List users"
         assert result["method"] == "GET"
         assert result["group"] == "Users"
@@ -163,10 +163,10 @@ class TestParseOpenapiOperation:
                     "name": "id",
                     "in": "path",
                     "required": True,
-                    "schema": {"type": "string"}
+                    "schema": {"type": "string"},
                 }
             ],
-            "responses": {"200": {"description": "Success"}}
+            "responses": {"200": {"description": "Success"}},
         }
         result = parse_openapi_operation("/users/{id}", "get", operation, "")
         assert len(result["params"]) == 1
@@ -177,7 +177,7 @@ class TestParseOpenapiOperation:
         operation = {
             "summary": "Old endpoint",
             "deprecated": True,
-            "responses": {"200": {"description": "Success"}}
+            "responses": {"200": {"description": "Success"}},
         }
         result = parse_openapi_operation("/old", "get", operation, "")
         assert result["metadata"]["deprecated"] is True
@@ -198,7 +198,11 @@ class TestParseOpenapiSpec:
         assert len(endpoints) == 6
 
         # Check first endpoint
-        users_get = next(e for e in endpoints if e["path"].endswith("/users") and e["method"] == "GET")
+        users_get = next(
+            e
+            for e in endpoints
+            if e["path"].endswith("/users") and e["method"] == "GET"
+        )
         assert users_get["group"] == "Users"
         assert users_get["name"] == "List all users"
 
@@ -218,10 +222,10 @@ class TestParseOpenapiSpec:
                 "/users": {
                     "get": {
                         "summary": "List users",
-                        "responses": {"200": {"description": "Success"}}
+                        "responses": {"200": {"description": "Success"}},
                     }
                 }
-            }
+            },
         }
         endpoints = parse_openapi_spec(data)
         assert len(endpoints) == 1
@@ -236,10 +240,10 @@ class TestParseOpenapiSpec:
                 "/test": {
                     "get": {
                         "summary": "Test endpoint",
-                        "responses": {"200": {"description": "Success"}}
+                        "responses": {"200": {"description": "Success"}},
                     }
                 }
-            }
+            },
         }
         endpoints = parse_openapi_spec(data)
         assert len(endpoints) == 1
@@ -250,7 +254,7 @@ class TestParseOpenapiSpec:
         data = {
             "openapi": "3.0.3",
             "info": {"title": "Empty API", "version": "1.0.0"},
-            "paths": {}
+            "paths": {},
         }
         endpoints = parse_openapi_spec(data)
         assert len(endpoints) == 0

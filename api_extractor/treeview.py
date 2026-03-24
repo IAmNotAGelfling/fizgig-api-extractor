@@ -33,7 +33,7 @@ def get_method_style(method: str) -> str:
         "DELETE": "bold red",
         "HEAD": "bold blue",
         "OPTIONS": "bold white",
-        "TRACE": "bold white"
+        "TRACE": "bold white",
     }
 
     return styles.get(method, "bold white")
@@ -62,10 +62,7 @@ def display_tree(endpoints: List[Dict[str, Any]], show_params: bool = False) -> 
     console = Console()
 
     # Create root tree
-    tree = Tree(
-        Text("API Endpoints", style="bold blue"),
-        guide_style="bright_black"
-    )
+    tree = Tree(Text("API Endpoints", style="bold blue"), guide_style="bright_black")
 
     # Group endpoints by category
     grouped = group_by_tag(endpoints, "group")
@@ -76,8 +73,7 @@ def display_tree(endpoints: List[Dict[str, Any]], show_params: bool = False) -> 
 
         # Create group node
         group_node = tree.add(
-            Text(group_name, style="bold magenta"),
-            guide_style="bright_black"
+            Text(group_name, style="bold magenta"), guide_style="bright_black"
         )
 
         # Add endpoints to group
@@ -108,7 +104,9 @@ def display_tree(endpoints: List[Dict[str, Any]], show_params: bool = False) -> 
 
             # Add description if available
             if show_params and description:
-                endpoint_node.add(Text(f"Description: {description}", style="dim italic"))
+                endpoint_node.add(
+                    Text(f"Description: {description}", style="dim italic")
+                )
 
             # Add parameters if requested
             if show_params and params:
@@ -147,5 +145,7 @@ def display_tree(endpoints: List[Dict[str, Any]], show_params: bool = False) -> 
     total_endpoints = len(endpoints)
     total_groups = len(grouped)
 
-    console.print(f"[bold]Total:[/bold] {total_endpoints} endpoint(s) in {total_groups} group(s)")
+    console.print(
+        f"[bold]Total:[/bold] {total_endpoints} endpoint(s) in {total_groups} group(s)"
+    )
     console.print()

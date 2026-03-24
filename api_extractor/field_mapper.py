@@ -23,7 +23,7 @@ def get_nested_field(obj: Dict[str, Any], field_path: str) -> Any:
         >>> get_nested_field(data, "metadata.deprecated")
         True
     """
-    parts = field_path.split('.')
+    parts = field_path.split(".")
     current = obj
 
     for part in parts:
@@ -34,8 +34,9 @@ def get_nested_field(obj: Dict[str, Any], field_path: str) -> Any:
     return current
 
 
-def apply_field_mapping(endpoints: List[Dict[str, Any]],
-                       field_map: Optional[Dict[str, str]]) -> List[Dict[str, Any]]:
+def apply_field_mapping(
+    endpoints: List[Dict[str, Any]], field_map: Optional[Dict[str, str]]
+) -> List[Dict[str, Any]]:
     """
     Transform endpoints based on field mapping.
 

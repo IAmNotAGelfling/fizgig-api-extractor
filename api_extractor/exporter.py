@@ -24,13 +24,12 @@ class CustomHTMLRenderer(HTMLRenderer):
         s = f'<a href="{self.safe_url(url)}" target="_blank"'
         if title:
             s += f' title="{mistune.escape_html(title)}"'
-        return s + f'>{text}</a>'
+        return s + f">{text}</a>"
 
 
 # Create mistune markdown renderer with custom link handling
 markdown_renderer = mistune.create_markdown(
-    renderer=CustomHTMLRenderer(escape=True),
-    plugins=['strikethrough', 'table']
+    renderer=CustomHTMLRenderer(escape=True), plugins=["strikethrough", "table"]
 )
 
 
@@ -64,10 +63,10 @@ def clean_path_for_display(path: str) -> str:
         Cleaned path
     """
     # Remove {{variable}} Postman templates
-    cleaned = re.sub(r'\{\{[^}]+\}\}', '', path)
+    cleaned = re.sub(r"\{\{[^}]+\}\}", "", path)
 
     # Clean up any double slashes
-    cleaned = re.sub(r'/+', '/', cleaned)
+    cleaned = re.sub(r"/+", "/", cleaned)
 
     return cleaned
 
@@ -89,18 +88,18 @@ def markdown_to_plain_text(text: str) -> str:
     html = markdown_renderer(text)
 
     # Strip all HTML tags
-    plain = re.sub(r'<[^>]+>', '', html)
+    plain = re.sub(r"<[^>]+>", "", html)
 
     # Convert common HTML entities
-    plain = plain.replace('&lt;', '<')
-    plain = plain.replace('&gt;', '>')
-    plain = plain.replace('&amp;', '&')
-    plain = plain.replace('&quot;', '"')
-    plain = plain.replace('&apos;', "'")
+    plain = plain.replace("&lt;", "<")
+    plain = plain.replace("&gt;", ">")
+    plain = plain.replace("&amp;", "&")
+    plain = plain.replace("&quot;", '"')
+    plain = plain.replace("&apos;", "'")
 
     # Clean up extra whitespace and newlines
-    plain = re.sub(r'\n\n+', '\n', plain)
-    plain = re.sub(r'  +', ' ', plain)
+    plain = re.sub(r"\n\n+", "\n", plain)
+    plain = re.sub(r"  +", " ", plain)
     plain = plain.strip()
 
     return plain
@@ -156,7 +155,9 @@ def export_markdown(endpoints: List[Dict[str, Any]], output_path: str) -> None:
                     param_required = "Yes" if param.get("required", False) else "No"
                     param_desc = param.get("description", "")
 
-                    lines.append(f"| `{param_name}` | {param_in} | {param_type} | {param_required} | {param_desc} |\n")
+                    lines.append(
+                        f"| `{param_name}` | {param_in} | {param_type} | {param_required} | {param_desc} |\n"
+                    )
 
             lines.append("\n---\n")
 
@@ -164,13 +165,17 @@ def export_markdown(endpoints: List[Dict[str, Any]], output_path: str) -> None:
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
 
-def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
-               field_map: Dict[str, str] = None, delimiter: str = ',',
-               quoting: str = 'minimal') -> None:
+def export_csv(
+    endpoints: List[Dict[str, Any]],
+    output_path: str,
+    field_map: Dict[str, str] = None,
+    delimiter: str = ",",
+    quoting: str = "minimal",
+) -> None:
     """
     Export endpoints to CSV format.
 
@@ -191,10 +196,10 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
 
     # Map quoting parameter to csv module constants
     quoting_map = {
-        'minimal': csv.QUOTE_MINIMAL,
-        'all': csv.QUOTE_ALL,
-        'nonnumeric': csv.QUOTE_NONNUMERIC,
-        'none': csv.QUOTE_NONE
+        "minimal": csv.QUOTE_MINIMAL,
+        "all": csv.QUOTE_ALL,
+        "nonnumeric": csv.QUOTE_NONNUMERIC,
+        "none": csv.QUOTE_NONE,
     }
     csv_quoting = quoting_map.get(quoting.lower(), csv.QUOTE_MINIMAL)
 
@@ -206,7 +211,7 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(output_file, 'w', encoding='utf-8', newline='') as f:
+        with open(output_file, "w", encoding="utf-8", newline="") as f:
             writer = csv.writer(f, delimiter=delimiter, quoting=csv_quoting)
 
             # Write header from mapped field names
@@ -222,19 +227,21 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_file, 'w', encoding='utf-8', newline='') as f:
+    with open(output_file, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, delimiter=delimiter, quoting=csv_quoting)
 
         # Write header
-        writer.writerow([
-            "Group",
-            "Name",
-            "Method",
-            "Path",
-            "Description",
-            "Parameters",
-            "Deprecated"
-        ])
+        writer.writerow(
+            [
+                "Group",
+                "Name",
+                "Method",
+                "Path",
+                "Description",
+                "Parameters",
+                "Deprecated",
+            ]
+        )
 
         # Write endpoints
         for endpoint in endpoints:
@@ -253,29 +260,42 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
                 param_name = param.get("name", "")
                 param_in = param.get("in", "")
                 param_type = param.get("type", "")
-                param_required = "required" if param.get("required", False) else "optional"
+                param_required = (
+                    "required" if param.get("required", False) else "optional"
+                )
                 # Strip markdown from parameter description
                 param_desc = markdown_to_plain_text(param.get("description", ""))
                 if param_desc:
-                    param_strings.append(f"{param_name} ({param_in}, {param_type}, {param_required}) - {param_desc}")
+                    param_strings.append(
+                        f"{param_name} ({param_in}, {param_type}, {param_required}) - {param_desc}"
+                    )
                 else:
-                    param_strings.append(f"{param_name} ({param_in}, {param_type}, {param_required})")
+                    param_strings.append(
+                        f"{param_name} ({param_in}, {param_type}, {param_required})"
+                    )
 
             params_str = "; ".join(param_strings)
 
-            writer.writerow([
-                group,
-                name,
-                method,
-                path,
-                description,
-                params_str,
-                "Yes" if deprecated else "No"
-            ])
+            writer.writerow(
+                [
+                    group,
+                    name,
+                    method,
+                    path,
+                    description,
+                    params_str,
+                    "Yes" if deprecated else "No",
+                ]
+            )
 
 
-def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool = True,
-                plain_text: bool = False, field_map: Dict[str, str] = None) -> None:
+def export_json(
+    endpoints: List[Dict[str, Any]],
+    output_path: str,
+    pretty: bool = True,
+    plain_text: bool = False,
+    field_map: Dict[str, str] = None,
+) -> None:
     """
     Export endpoints to JSON format.
 
@@ -309,24 +329,29 @@ def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool 
                 "params": [
                     {
                         **param,
-                        "description": markdown_to_plain_text(param.get("description", ""))
+                        "description": markdown_to_plain_text(
+                            param.get("description", "")
+                        ),
                     }
                     for param in endpoint.get("params", [])
-                ]
+                ],
             }
             for endpoint in endpoints
         ]
 
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         if pretty:
             json.dump(endpoints, f, indent=2, ensure_ascii=False)
         else:
             json.dump(endpoints, f, ensure_ascii=False)
 
 
-def export_html(endpoints: List[Dict[str, Any]], output_path: str,
-                template_path: Optional[str] = None,
-                config_dir: Optional[Path] = None) -> None:
+def export_html(
+    endpoints: List[Dict[str, Any]],
+    output_path: str,
+    template_path: Optional[str] = None,
+    config_dir: Optional[Path] = None,
+) -> None:
     """
     Export endpoints to HTML format using template.
 
@@ -351,13 +376,12 @@ def export_html(endpoints: List[Dict[str, Any]], output_path: str,
         source_file=source_file,
         source_format="unknown",
         template_path=template_path,
-        config_dir=config_dir
+        config_dir=config_dir,
     )
 
     # Write to file
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write(html)
-

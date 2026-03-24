@@ -31,9 +31,7 @@ class TestCliValidateConfig:
             # Create valid config
             config = {
                 "input": "api.json",
-                "exports": [
-                    {"format": "json", "output": "api.json"}
-                ]
+                "exports": [{"format": "json", "output": "api.json"}],
             }
             config_path.write_text(json.dumps(config))
 
@@ -49,11 +47,7 @@ class TestCliValidateConfig:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Arrange
             config_path = Path(tmpdir) / "config.json"
-            config = {
-                "exports": [
-                    {"format": "json", "output": "api.json"}
-                ]
-            }
+            config = {"exports": [{"format": "json", "output": "api.json"}]}
             config_path.write_text(json.dumps(config))
 
             # Act
@@ -70,9 +64,7 @@ class TestCliValidateConfig:
             config_path = Path(tmpdir) / "config.json"
             config = {
                 "input": "api.json",
-                "exports": [
-                    {"format": "invalid", "output": "api.txt"}
-                ]
+                "exports": [{"format": "invalid", "output": "api.txt"}],
             }
             config_path.write_text(json.dumps(config))
 
@@ -90,9 +82,7 @@ class TestCliValidateConfig:
             config_path = Path(tmpdir) / "config.json"
             config = {
                 "input": "nonexistent.json",
-                "exports": [
-                    {"format": "json", "output": "api.json"}
-                ]
+                "exports": [{"format": "json", "output": "api.json"}],
             }
             config_path.write_text(json.dumps(config))
 
@@ -118,8 +108,12 @@ class TestCliValidateConfig:
             config = {
                 "input": "api.json",
                 "exports": [
-                    {"format": "html", "output": "api.html", "template": "nonexistent.html"}
-                ]
+                    {
+                        "format": "html",
+                        "output": "api.html",
+                        "template": "nonexistent.html",
+                    }
+                ],
             }
             config_path.write_text(json.dumps(config))
 
@@ -137,9 +131,7 @@ class TestCliValidateConfig:
             config_path = Path(tmpdir) / "config.json"
             config = {
                 "input": "https://api.example.com/spec.json",
-                "exports": [
-                    {"format": "json", "output": "api.json"}
-                ]
+                "exports": [{"format": "json", "output": "api.json"}],
             }
             config_path.write_text(json.dumps(config))
 
@@ -177,6 +169,7 @@ class TestCliValidateConfig:
         """Test validate-config with auto-discovery."""
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
+
             old_cwd = os.getcwd()
             os.chdir(tmpdir)
 
@@ -191,9 +184,7 @@ class TestCliValidateConfig:
                 # Create valid config
                 config = {
                     "input": "api.json",
-                    "exports": [
-                        {"format": "json", "output": "api.json"}
-                    ]
+                    "exports": [{"format": "json", "output": "api.json"}],
                 }
                 config_path.write_text(json.dumps(config))
 
@@ -211,6 +202,7 @@ class TestCliValidateConfig:
         """Test validate-config auto-discovery when no config found."""
         with tempfile.TemporaryDirectory() as tmpdir:
             import os
+
             old_cwd = os.getcwd()
             os.chdir(tmpdir)
 
