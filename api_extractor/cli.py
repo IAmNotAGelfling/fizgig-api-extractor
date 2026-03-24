@@ -516,6 +516,83 @@ def init(
         raise typer.Exit(1)
 
 
+@app.command()
+def validate_config(
+    config_path: Optional[str] = typer.Argument(
+        None,
+        help="Path to config file (auto-discovers .fizgig-config.json if not specified)"
+    )
+) -> None:
+    """
+    Validate a config file without running exports.
+
+    Performs comprehensive validation:
+    - JSON syntax and structure
+    - Required fields (input, exports)
+    - Export format validity
+    - Input file existence (if local path)
+    - Template file existence (if specified)
+
+    Examples:
+
+        # Validate specific config file
+        fizgig-api-extractor validate-config my-config.json
+
+        # Auto-discover and validate .fizgig-config.json
+        fizgig-api-extractor validate-config
+    """
+    try:
+        from api_extractor.config import load_config, validate_config_deep
+
+        # Load config (auto-discovers if path not specified)
+        console.print(f"[bold]Loading config[/bold]...")
+        try:
+            config = load_config(config_path)
+        except FileNotFoundError as e:
+            console_err.print(f"[red]✗[/red] {e}")
+            raise typer.Exit(1)
+        except json.JSONDecodeError as e:
+            console_err.print(f"[red]✗[/red] Invalid JSON: {e}")
+            raise typer.Exit(1)
+
+        # Determine config directory for deep validation
+        if config_path:
+            config_dir = Path(config_path).parent
+        else:
+            config_dir = Path.cwd()
+
+        console.print(f"[green]✓[/green] Config structure valid")
+
+        # Deep validation (file existence checks)
+        console.print(f"[bold]Validating file references[/bold]...")
+        validation_result = validate_config_deep(config, config_dir)
+
+        if validation_result["valid"]:
+            console.print(f"[green]✓[/green] All file references valid")
+            console.print(f"\n[bold green]Config is valid![/bold green]")
+            console.print(f"\nConfig summary:")
+            console.print(f"  Input: [bold]{config['input']}[/bold]")
+            console.print(f"  Exports: [bold]{len(config['exports'])}[/bold] configured")
+            return
+
+        # Display validation errors
+        console.print(f"[red]✗[/red] Validation failed\n")
+        for error in validation_result["errors"]:
+            console_err.print(f"[red]●[/red] {error['path']}")
+            console_err.print(f"  {error['message']}")
+            if "suggestion" in error:
+                console_err.print(f"  [dim]{error['suggestion']}[/dim]")
+            console_err.print()
+
+        raise typer.Exit(1)
+
+    except Exception as e:
+        if isinstance(e, typer.Exit):
+            raise
+        console_err.print(f"[red]✗[/red] Unexpected error: {e}")
+        raise typer.Exit(1)
+
+
 # Default behavior: if no command is provided, display help
 if __name__ == "__main__":
     app()
