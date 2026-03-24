@@ -353,7 +353,9 @@ class TestCliUrlSupport:
 
             # Assert
             assert result.exit_code == 0
-            assert f"Saved to {save_path}" in result.output
+            # Rich may wrap long paths, so check components separately
+            assert "Saved to" in result.output
+            assert save_path in result.output
             assert Path(save_path).exists()
 
     def test_extract_invalid_header_format(self):
