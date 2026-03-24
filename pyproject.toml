@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fizgig-api-extractor"
-version = "1.0.1"
+version = "1.1.0"
 description = "Parse Postman collections and OpenAPI specs, extract endpoints, and export in multiple formats"
 readme = "README.md"
 license = {text = "MIT"}
