@@ -101,6 +101,18 @@ def extract(
         None,
         "--save-url",
         help="Save URL content to file (optional path, defaults to filename from URL)"
+    ),
+    config: Optional[str] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Path to config file (auto-discovers .fizgig-config.json if not specified)"
+    ),
+    template: Optional[str] = typer.Option(
+        None,
+        "--template",
+        "-t",
+        help="Path to custom HTML template (HTML format only)"
     )
 ) -> None:
     """
@@ -138,6 +150,42 @@ def extract(
         fizgig-api-extractor extract https://api.example.com/spec --save-url custom.json
     """
     try:
+        # Check if using config file
+        if config:
+            from api_extractor.config import run_exports_from_config
+
+            # Parse headers for CLI override
+            headers_dict = None
+            if header:
+                headers_dict = {}
+                for h in header:
+                    if ':' not in h:
+                        console_err.print(f"[red]✗[/red] Invalid header format: '{h}'")
+                        console_err.print("Expected format: 'Name: Value'")
+                        raise typer.Exit(1)
+                    name, value = h.split(':', 1)
+                    headers_dict[name.strip()] = value.strip()
+
+            # Build CLI overrides
+            cli_overrides = {
+                "input": input_file if input_file != "api.json" else None,  # Only override if not default
+                "headers": headers_dict,
+                "format": format if output_file else None,
+                "output": output_file,
+                "plain_text": plain_text,
+                "template": template
+            }
+
+            # Remove None values
+            cli_overrides = {k: v for k, v in cli_overrides.items() if v is not None}
+
+            # Run exports from config
+            console.print(f"[bold]Loading config[/bold] from {config}...")
+            run_exports_from_config(config, cli_overrides)
+            console.print(f"[green]✓[/green] All exports completed")
+            return
+
+        # Standard CLI-only mode (no config)
         # Parse headers if provided
         headers_dict = None
         if header:
@@ -194,7 +242,7 @@ def extract(
         elif format_lower == "json":
             export_json(endpoints, output_file, plain_text=plain_text)
         elif format_lower == "html":
-            export_html(endpoints, output_file)
+            export_html(endpoints, output_file, template_path=template)
         else:
             console_err.print(f"[red]✗[/red] Unknown format: {format}")
             console_err.print("Supported formats: markdown, csv, json, html")
