@@ -65,7 +65,7 @@ def load_json(file_path: Path) -> Dict[str, Any]:
         FileNotFoundError: If file doesn't exist
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except json.JSONDecodeError as e:
         raise ValueError(f"Invalid JSON in {file_path}: {e}")
@@ -90,7 +90,7 @@ def load_yaml(file_path: Path) -> Dict[str, Any]:
         FileNotFoundError: If file doesn't exist
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
     except yaml.YAMLError as e:
         raise ValueError(f"Invalid YAML in {file_path}: {e}")
@@ -100,8 +100,9 @@ def load_yaml(file_path: Path) -> Dict[str, Any]:
         raise ValueError(f"Error reading {file_path}: {e}")
 
 
-def load_api_file(file_path: str, headers: Dict[str, str] = None,
-                  save_path: str = None) -> Tuple[Dict[str, Any], FormatType]:
+def load_api_file(
+    file_path: str, headers: Dict[str, str] = None, save_path: str = None
+) -> Tuple[Dict[str, Any], FormatType]:
     """
     Load an API specification file or URL and detect its format.
 
@@ -130,8 +131,9 @@ def load_api_file(file_path: str, headers: Dict[str, str] = None,
         Detected format: openapi
     """
     # Check if input is a URL
-    if file_path.startswith('http://') or file_path.startswith('https://'):
+    if file_path.startswith("http://") or file_path.startswith("https://"):
         from api_extractor.fetcher import load_from_url
+
         return load_from_url(file_path, headers, save_path)
 
     # Otherwise, load from local file
@@ -143,9 +145,9 @@ def load_api_file(file_path: str, headers: Dict[str, str] = None,
     # Determine file type by extension
     suffix = path.suffix.lower()
 
-    if suffix == '.json':
+    if suffix == ".json":
         data = load_json(path)
-    elif suffix in ['.yaml', '.yml']:
+    elif suffix in [".yaml", ".yml"]:
         data = load_yaml(path)
     else:
         # Try JSON first, then YAML for files without standard extensions

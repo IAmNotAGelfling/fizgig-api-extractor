@@ -4,9 +4,9 @@ OpenAPI specification parser for fizgig-api-extractor.
 Parses OpenAPI 3.x specifications (JSON and YAML) and extracts endpoint information.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
-from api_extractor.utils import safe_get, format_method, normalise_url, ensure_list
+from api_extractor.utils import format_method, normalise_url, ensure_list
 
 
 def resolve_server_url(servers: List[Dict[str, Any]]) -> str:
@@ -62,7 +62,7 @@ def parse_openapi_parameter(param: Dict[str, Any]) -> Dict[str, Any]:
         "in": param.get("in", "query"),
         "required": param.get("required", False),
         "type": param_type,
-        "description": param.get("description", "")
+        "description": param.get("description", ""),
     }
 
 
@@ -110,22 +110,26 @@ def parse_openapi_request_body(request_body: Dict[str, Any]) -> List[Dict[str, A
     if isinstance(properties, dict):
         for prop_name, prop_schema in properties.items():
             if isinstance(prop_schema, dict):
-                params.append({
-                    "name": prop_name,
-                    "in": "body",
-                    "required": prop_name in required_fields,
-                    "type": prop_schema.get("type", "string"),
-                    "description": prop_schema.get("description", "")
-                })
+                params.append(
+                    {
+                        "name": prop_name,
+                        "in": "body",
+                        "required": prop_name in required_fields,
+                        "type": prop_schema.get("type", "string"),
+                        "description": prop_schema.get("description", ""),
+                    }
+                )
     else:
         # If no properties, add a generic body parameter
-        params.append({
-            "name": "body",
-            "in": "body",
-            "required": required,
-            "type": schema.get("type", "object"),
-            "description": description
-        })
+        params.append(
+            {
+                "name": "body",
+                "in": "body",
+                "required": required,
+                "type": schema.get("type", "object"),
+                "description": description,
+            }
+        )
 
     return params
 
@@ -151,7 +155,7 @@ def parse_openapi_operation(
     method: str,
     operation: Dict[str, Any],
     base_url: str,
-    global_tags: List[str] = None
+    global_tags: List[str] = None,
 ) -> Dict[str, Any]:
     """
     Parse an OpenAPI operation (endpoint).
@@ -210,8 +214,8 @@ def parse_openapi_operation(
             "tags": tags,
             "deprecated": deprecated,
             "responses": responses,
-            "path_template": path
-        }
+            "path_template": path,
+        },
     }
 
 
@@ -266,7 +270,11 @@ def parse_openapi_spec(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     base_url = resolve_server_url(servers)
 
     # Extract global tags
-    global_tags = [tag.get("name") for tag in ensure_list(data.get("tags", [])) if isinstance(tag, dict)]
+    global_tags = [
+        tag.get("name")
+        for tag in ensure_list(data.get("tags", []))
+        if isinstance(tag, dict)
+    ]
 
     # Parse paths
     paths = data.get("paths", {})
@@ -281,7 +289,16 @@ def parse_openapi_spec(data: Dict[str, Any]) -> List[Dict[str, Any]]:
         path_params = ensure_list(path_item.get("parameters", []))
 
         # Iterate through HTTP methods
-        http_methods = ["get", "post", "put", "patch", "delete", "head", "options", "trace"]
+        http_methods = [
+            "get",
+            "post",
+            "put",
+            "patch",
+            "delete",
+            "head",
+            "options",
+            "trace",
+        ]
 
         for method in http_methods:
             operation = path_item.get(method)
@@ -302,7 +319,7 @@ def parse_openapi_spec(data: Dict[str, Any]) -> List[Dict[str, Any]]:
                 method=method,
                 operation=operation_copy,
                 base_url=base_url,
-                global_tags=global_tags
+                global_tags=global_tags,
             )
 
             # Add API info to metadata

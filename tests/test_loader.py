@@ -58,7 +58,7 @@ class TestLoadJson:
 
     def test_load_valid_json(self):
         """Test loading valid JSON file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump({"test": "data"}, f)
             temp_path = f.name
 
@@ -70,7 +70,7 @@ class TestLoadJson:
 
     def test_load_invalid_json(self):
         """Test loading invalid JSON."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             f.write("{invalid json")
             temp_path = f.name
 
@@ -91,7 +91,7 @@ class TestLoadYaml:
 
     def test_load_valid_yaml(self):
         """Test loading valid YAML file."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump({"test": "data"}, f)
             temp_path = f.name
 
@@ -103,7 +103,7 @@ class TestLoadYaml:
 
     def test_load_invalid_yaml(self):
         """Test loading invalid YAML."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             f.write("invalid: yaml: content:")
             temp_path = f.name
 
@@ -120,11 +120,13 @@ class TestLoadApiFile:
     def test_load_postman_json(self):
         """Test loading Postman collection JSON."""
         data = {
-            "info": {"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"},
-            "item": []
+            "info": {
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+            },
+            "item": [],
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(data, f)
             temp_path = f.name
 
@@ -140,10 +142,10 @@ class TestLoadApiFile:
         data = {
             "openapi": "3.0.3",
             "info": {"title": "Test API", "version": "1.0.0"},
-            "paths": {}
+            "paths": {},
         }
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump(data, f)
             temp_path = f.name
 
@@ -158,7 +160,7 @@ class TestLoadApiFile:
         """Test loading file with unknown format."""
         data = {"random": "data"}
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(data, f)
             temp_path = f.name
 
@@ -196,7 +198,7 @@ class TestValidateOpenapiSpec:
         data = {
             "openapi": "3.0.3",
             "info": {"title": "Test", "version": "1.0.0"},
-            "paths": {}
+            "paths": {},
         }
         assert validate_openapi_spec(data) is True
 
@@ -207,11 +209,7 @@ class TestValidateOpenapiSpec:
 
     def test_validate_wrong_version(self):
         """Test validation fails with wrong OpenAPI version."""
-        data = {
-            "openapi": "2.0",
-            "info": {"title": "Test"},
-            "paths": {}
-        }
+        data = {"openapi": "2.0", "info": {"title": "Test"}, "paths": {}}
         assert validate_openapi_spec(data) is False
 
     def test_validate_missing_paths(self):
@@ -231,7 +229,7 @@ class TestLoadFromUrl:
         spec = {
             "openapi": "3.0.0",
             "info": {"title": "Test API", "version": "1.0.0"},
-            "paths": {}
+            "paths": {},
         }
         responses.add(responses.GET, url, json=spec, status=200)
 
@@ -250,9 +248,9 @@ class TestLoadFromUrl:
         collection = {
             "info": {
                 "name": "Test Collection",
-                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
             },
-            "item": []
+            "item": [],
         }
         responses.add(responses.GET, url, json=collection, status=200)
 
@@ -298,6 +296,113 @@ class TestLoadFromUrl:
             # Assert
             assert format_type == "openapi"
             assert Path(save_path).exists()
-            with open(save_path, 'r') as f:
+            with open(save_path, "r") as f:
                 saved_data = json.load(f)
                 assert saved_data["openapi"] == "3.0.0"
+
+
+class TestLoaderErrorPaths:
+    """Test error handling paths in loader."""
+
+    def test_load_json_file_not_found(self):
+        """Test load_json with non-existent file."""
+        # Act & Assert
+        with pytest.raises(FileNotFoundError, match="File not found"):
+            load_json(Path("/nonexistent/path/file.json"))
+
+    def test_load_yaml_file_not_found(self):
+        """Test load_yaml with non-existent file."""
+        # Act & Assert
+        with pytest.raises(FileNotFoundError, match="File not found"):
+            load_yaml(Path("/nonexistent/path/file.yaml"))
+
+    def test_load_api_file_unknown_extension_both_fail(self):
+        """Test loading file with unknown extension where both JSON and YAML parsing fail."""
+        # Arrange - file with .txt extension containing invalid JSON/YAML
+        # Use content that will fail JSON parse and YAML parse
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            # Write binary-like content that will fail both parsers
+            f.write("\x00\x01\x02 invalid binary content")
+            temp_path = f.name
+
+        try:
+            # Act & Assert
+            with pytest.raises(ValueError, match="Could not parse .* as JSON or YAML"):
+                load_api_file(temp_path)
+        finally:
+            Path(temp_path).unlink()
+
+    def test_load_api_file_unknown_extension_yaml_success(self):
+        """Test loading file with unknown extension that's valid YAML."""
+        # Arrange - file with .txt extension containing valid YAML
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as f:
+            f.write('openapi: "3.0.0"\ninfo:\n  title: Test\npaths: {}')
+            temp_path = f.name
+
+        try:
+            # Act
+            data, format_type = load_api_file(temp_path)
+
+            # Assert
+            assert format_type == "openapi"
+            assert data["openapi"] == "3.0.0"
+        finally:
+            Path(temp_path).unlink()
+
+    def test_load_api_file_unknown_format_detected(self):
+        """Test load_api_file with data that can't be classified."""
+        # Arrange - valid JSON but not Postman or OpenAPI
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump({"random": "data", "not": "api spec"}, f)
+            temp_path = f.name
+
+        try:
+            # Act & Assert
+            with pytest.raises(ValueError, match="Could not detect format"):
+                load_api_file(temp_path)
+        finally:
+            Path(temp_path).unlink()
+
+    def test_validate_openapi_spec_missing_info(self):
+        """Test OpenAPI validation with missing info section."""
+        # Arrange
+        spec = {
+            "openapi": "3.0.0",
+            # missing "info"
+            "paths": {},
+        }
+
+        # Act & Assert
+        assert not validate_openapi_spec(spec)
+
+    def test_validate_openapi_spec_missing_paths(self):
+        """Test OpenAPI validation with missing paths section."""
+        # Arrange
+        spec = {
+            "openapi": "3.0.0",
+            "info": {"title": "Test", "version": "1.0.0"},
+            # missing "paths"
+        }
+
+        # Act & Assert
+        assert not validate_openapi_spec(spec)
+
+    def test_validate_openapi_spec_not_dict(self):
+        """Test OpenAPI validation with non-dict input."""
+        # Arrange
+        spec = ["not", "a", "dict"]
+
+        # Act & Assert
+        assert not validate_openapi_spec(spec)
+
+    def test_validate_openapi_spec_wrong_version(self):
+        """Test OpenAPI validation with wrong version."""
+        # Arrange
+        spec = {
+            "openapi": "2.0",  # Not 3.x
+            "info": {"title": "Test"},
+            "paths": {},
+        }
+
+        # Act & Assert
+        assert not validate_openapi_spec(spec)

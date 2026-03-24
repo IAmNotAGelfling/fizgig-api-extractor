@@ -168,6 +168,24 @@ Tests use **pytest** with the following structure:
 - Fixture files in `tests/fixtures/`: `sample_postman.json`, `sample_openapi.yaml`
 - Test coverage: 212+ tests across all modules
 
+### Testing CLI Output
+
+When testing CLI output that includes paths or long strings, use the test helpers in `tests/test_helpers.py` to handle Rich console text wrapping differences across platforms (especially macOS):
+
+```python
+from tests.test_helpers import assert_all_in_output, assert_in_output
+
+# Instead of:
+assert f"Saved to {path}" in result.output  # May fail on macOS due to wrapping
+
+# Use:
+assert_all_in_output(["Saved to", path], result.output)
+# or
+assert_in_output(f"Saved to {path}", result.output)
+```
+
+**Why:** Rich's console wraps long lines differently on macOS, inserting newlines mid-sentence. The helpers normalize this wrapping for consistent assertions across platforms.
+
 ## New Features (v1.0.1+)
 
 ### URL Support (fetcher.py)

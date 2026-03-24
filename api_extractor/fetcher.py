@@ -12,8 +12,9 @@ from typing import Dict, Any, Optional, Tuple
 from urllib.parse import urlparse
 
 
-def fetch_from_url(url: str, headers: Optional[Dict[str, str]] = None,
-                   timeout: int = 30) -> Tuple[str, str]:
+def fetch_from_url(
+    url: str, headers: Optional[Dict[str, str]] = None, timeout: int = 30
+) -> Tuple[str, str]:
     """
     Fetch content from URL.
 
@@ -38,31 +39,31 @@ def fetch_from_url(url: str, headers: Optional[Dict[str, str]] = None,
             raise ValueError(f"HTTP {response.status_code}: {response.reason}")
 
         # Detect format from content-type or URL
-        content_type = response.headers.get('Content-Type', '').lower()
+        content_type = response.headers.get("Content-Type", "").lower()
         detected_format = None
 
-        if 'yaml' in content_type or 'yml' in content_type:
-            detected_format = 'yaml'
-        elif 'json' in content_type:
-            detected_format = 'json'
+        if "yaml" in content_type or "yml" in content_type:
+            detected_format = "yaml"
+        elif "json" in content_type:
+            detected_format = "json"
         else:
             # Fall back to URL extension
             parsed_url = urlparse(url)
             path = parsed_url.path.lower()
-            if path.endswith(('.yaml', '.yml')):
-                detected_format = 'yaml'
+            if path.endswith((".yaml", ".yml")):
+                detected_format = "yaml"
             else:
-                detected_format = 'json'  # Default to JSON
+                detected_format = "json"  # Default to JSON
 
         content = response.text
 
         # Validate content can be parsed
-        if detected_format == 'json':
+        if detected_format == "json":
             try:
                 json.loads(content)
             except json.JSONDecodeError as e:
                 raise ValueError(f"URL returned invalid JSON: {e}")
-        elif detected_format == 'yaml':
+        elif detected_format == "yaml":
             try:
                 yaml.safe_load(content)
             except yaml.YAMLError as e:
@@ -101,14 +102,15 @@ def save_url_content(content: str, save_path: Optional[str], url: str) -> str:
     save_file.parent.mkdir(parents=True, exist_ok=True)
 
     # Write content
-    with open(save_file, 'w', encoding='utf-8') as f:
+    with open(save_file, "w", encoding="utf-8") as f:
         f.write(content)
 
     return save_path
 
 
-def load_from_url(url: str, headers: Optional[Dict[str, str]] = None,
-                  save_path: Optional[str] = None) -> Tuple[Dict[str, Any], str]:
+def load_from_url(
+    url: str, headers: Optional[Dict[str, str]] = None, save_path: Optional[str] = None
+) -> Tuple[Dict[str, Any], str]:
     """
     Fetch, parse, and optionally save content from URL.
 
@@ -123,7 +125,7 @@ def load_from_url(url: str, headers: Optional[Dict[str, str]] = None,
     Raises:
         ValueError: On fetch or parse errors
     """
-    from api_extractor.loader import detect_format, load_json, load_yaml
+    from api_extractor.loader import detect_format
 
     # Fetch content
     content, detected_format = fetch_from_url(url, headers)
@@ -133,7 +135,7 @@ def load_from_url(url: str, headers: Optional[Dict[str, str]] = None,
         save_url_content(content, save_path, url)
 
     # Parse content
-    if detected_format == 'json':
+    if detected_format == "json":
         data = json.loads(content)
     else:  # yaml
         data = yaml.safe_load(content)
@@ -143,8 +145,8 @@ def load_from_url(url: str, headers: Optional[Dict[str, str]] = None,
 
     if format_type == "unknown":
         raise ValueError(
-            f"Could not detect format of URL content. "
-            f"Expected a Postman v2.1 collection or OpenAPI 3.x specification."
+            "Could not detect format of URL content. "
+            "Expected a Postman v2.1 collection or OpenAPI 3.x specification."
         )
 
     return data, format_type

@@ -22,16 +22,16 @@ def load_default_template() -> str:
     # Use importlib.resources to load from package
     try:
         # Python 3.9+
-        files = importlib.resources.files('api_extractor')
-        template_path = files / 'resources' / 'templates' / 'default.html'
-        return template_path.read_text(encoding='utf-8')
+        files = importlib.resources.files("api_extractor")
+        template_path = files / "resources" / "templates" / "default.html"
+        return template_path.read_text(encoding="utf-8")
     except AttributeError:
         # Python 3.8 fallback
         import pkg_resources
+
         return pkg_resources.resource_string(
-            'api_extractor',
-            'resources/templates/default.html'
-        ).decode('utf-8')
+            "api_extractor", "resources/templates/default.html"
+        ).decode("utf-8")
 
 
 def load_custom_template(template_path: str, config_dir: Optional[Path] = None) -> str:
@@ -68,13 +68,12 @@ def load_custom_template(template_path: str, config_dir: Optional[Path] = None) 
 
     for path in paths_to_try:
         if path.exists():
-            return path.read_text(encoding='utf-8')
+            return path.read_text(encoding="utf-8")
 
     # Not found - provide helpful error
-    tried_paths = '\n  - '.join(str(p) for p in paths_to_try)
+    tried_paths = "\n  - ".join(str(p) for p in paths_to_try)
     raise FileNotFoundError(
-        f"Template file not found: {template_path}\n"
-        f"Searched in:\n  - {tried_paths}"
+        f"Template file not found: {template_path}\nSearched in:\n  - {tried_paths}"
     )
 
 
@@ -89,17 +88,17 @@ def clean_path_for_display(path: str) -> str:
         Cleaned path
     """
     # Remove {{variable}} Postman templates
-    cleaned = re.sub(r'\{\{[^}]+\}\}', '', path)
+    cleaned = re.sub(r"\{\{[^}]+\}\}", "", path)
 
     # Clean up any double slashes
-    cleaned = re.sub(r'/+', '/', cleaned)
+    cleaned = re.sub(r"/+", "/", cleaned)
 
     return cleaned
 
 
-def prepare_template_data(endpoints: List[Dict[str, Any]],
-                         source_file: str = "",
-                         source_format: str = "") -> Dict[str, Any]:
+def prepare_template_data(
+    endpoints: List[Dict[str, Any]], source_file: str = "", source_format: str = ""
+) -> Dict[str, Any]:
     """
     Prepare data structure for template rendering.
 
@@ -148,16 +147,20 @@ def prepare_template_data(endpoints: List[Dict[str, Any]],
                 "path": path,
                 "description": description,
                 "deprecated": deprecated,
-                "params": params if has_params else None,  # None if empty for Mustache conditionals
+                "params": params
+                if has_params
+                else None,  # None if empty for Mustache conditionals
             }
 
             processed_endpoints.append(processed_endpoint)
 
-        groups.append({
-            "name": group_name,
-            "count": len(group_endpoints),
-            "endpoints": processed_endpoints
-        })
+        groups.append(
+            {
+                "name": group_name,
+                "count": len(group_endpoints),
+                "endpoints": processed_endpoints,
+            }
+        )
 
     # Prepare data for template
     data = {
@@ -166,17 +169,19 @@ def prepare_template_data(endpoints: List[Dict[str, Any]],
         "source_file": source_file if source_file else None,
         "source_format": source_format if source_format else None,
         "groups": groups,
-        "endpoints": endpoints  # Also provide flat structure
+        "endpoints": endpoints,  # Also provide flat structure
     }
 
     return data
 
 
-def render_html_template(endpoints: List[Dict[str, Any]],
-                        source_file: str = "",
-                        source_format: str = "",
-                        template_path: Optional[str] = None,
-                        config_dir: Optional[Path] = None) -> str:
+def render_html_template(
+    endpoints: List[Dict[str, Any]],
+    source_file: str = "",
+    source_format: str = "",
+    template_path: Optional[str] = None,
+    config_dir: Optional[Path] = None,
+) -> str:
     """
     Render HTML using template.
 

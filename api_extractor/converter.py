@@ -6,9 +6,8 @@ Converts between API specification formats, primarily OpenAPI → Postman.
 
 import uuid
 from typing import Dict, Any, List
-from datetime import datetime
 
-from api_extractor.utils import safe_get, ensure_list
+from api_extractor.utils import ensure_list
 
 
 def generate_postman_id() -> str:
@@ -68,10 +67,12 @@ def openapi_path_to_postman(path: str, base_url: str = "") -> Dict[str, Any]:
             postman_path_segments.append(segment)
 
     return {
-        "raw": f"{protocol}://{'.'.join(host_parts)}/{'/'.join(postman_path_segments)}" if protocol else f"/{'/'.join(postman_path_segments)}",
+        "raw": f"{protocol}://{'.'.join(host_parts)}/{'/'.join(postman_path_segments)}"
+        if protocol
+        else f"/{'/'.join(postman_path_segments)}",
         "protocol": protocol if protocol else "https",
         "host": host_parts if host_parts else ["localhost"],
-        "path": postman_path_segments
+        "path": postman_path_segments,
     }
 
 
@@ -85,13 +86,12 @@ def openapi_parameter_to_postman(param: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Postman parameter object
     """
-    param_in = param.get("in", "query")
 
     postman_param = {
         "key": param.get("name", ""),
         "value": "",
         "description": param.get("description", ""),
-        "disabled": False
+        "disabled": False,
     }
 
     # Add example value if available
@@ -129,18 +129,12 @@ def openapi_request_body_to_postman(request_body: Dict[str, Any]) -> Dict[str, A
     content_type = content_types[0]
     media_type = content[content_type]
 
-    body = {
-        "mode": "raw"
-    }
+    body = {"mode": "raw"}
 
     # Determine mode based on content type
     if "application/json" in content_type:
         body["mode"] = "raw"
-        body["options"] = {
-            "raw": {
-                "language": "json"
-            }
-        }
+        body["options"] = {"raw": {"language": "json"}}
 
         # Generate example JSON from schema
         schema = media_type.get("schema", {})
@@ -148,6 +142,7 @@ def openapi_request_body_to_postman(request_body: Dict[str, Any]) -> Dict[str, A
             example = generate_example_from_schema(schema)
             if example:
                 import json
+
                 body["raw"] = json.dumps(example, indent=2)
 
     elif "application/x-www-form-urlencoded" in content_type:
@@ -158,11 +153,9 @@ def openapi_request_body_to_postman(request_body: Dict[str, Any]) -> Dict[str, A
         if isinstance(schema, dict):
             properties = schema.get("properties", {})
             for prop_name in properties.keys():
-                body["urlencoded"].append({
-                    "key": prop_name,
-                    "value": "",
-                    "type": "text"
-                })
+                body["urlencoded"].append(
+                    {"key": prop_name, "value": "", "type": "text"}
+                )
 
     elif "multipart/form-data" in content_type:
         body["mode"] = "formdata"
@@ -173,12 +166,15 @@ def openapi_request_body_to_postman(request_body: Dict[str, Any]) -> Dict[str, A
             properties = schema.get("properties", {})
             for prop_name, prop_schema in properties.items():
                 if isinstance(prop_schema, dict):
-                    param_type = "file" if prop_schema.get("type") == "string" and prop_schema.get("format") == "binary" else "text"
-                    body["formdata"].append({
-                        "key": prop_name,
-                        "value": "",
-                        "type": param_type
-                    })
+                    param_type = (
+                        "file"
+                        if prop_schema.get("type") == "string"
+                        and prop_schema.get("format") == "binary"
+                        else "text"
+                    )
+                    body["formdata"].append(
+                        {"key": prop_name, "value": "", "type": param_type}
+                    )
 
     return body
 
@@ -238,10 +234,7 @@ def generate_example_from_schema(schema: Dict[str, Any]) -> Any:
 
 
 def openapi_operation_to_postman_item(
-    path: str,
-    method: str,
-    operation: Dict[str, Any],
-    base_url: str
+    path: str, method: str, operation: Dict[str, Any], base_url: str
 ) -> Dict[str, Any]:
     """
     Convert OpenAPI operation to Postman request item.
@@ -255,7 +248,11 @@ def openapi_operation_to_postman_item(
     Returns:
         Postman item object
     """
-    name = operation.get("summary") or operation.get("operationId") or f"{method.upper()} {path}"
+    name = (
+        operation.get("summary")
+        or operation.get("operationId")
+        or f"{method.upper()} {path}"
+    )
     description = operation.get("description", "")
 
     # Build Postman URL
@@ -282,11 +279,7 @@ def openapi_operation_to_postman_item(
         url["query"] = query_params
 
     # Build request object
-    request = {
-        "method": method.upper(),
-        "header": header_params,
-        "url": url
-    }
+    request = {"method": method.upper(), "header": header_params, "url": url}
 
     if description:
         request["description"] = description
@@ -298,11 +291,7 @@ def openapi_operation_to_postman_item(
         if body:
             request["body"] = body
 
-    return {
-        "name": name,
-        "request": request,
-        "response": []
-    }
+    return {"name": name, "request": request, "response": []}
 
 
 def openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -326,7 +315,6 @@ def openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
     info = openapi_data.get("info", {})
     api_title = info.get("title", "API")
     api_description = info.get("description", "")
-    api_version = info.get("version", "1.0.0")
 
     # Resolve base URL
     servers = ensure_list(openapi_data.get("servers", []))
@@ -340,9 +328,9 @@ def openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
             "_postman_id": generate_postman_id(),
             "name": api_title,
             "description": api_description,
-            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         },
-        "item": []
+        "item": [],
     }
 
     # Group endpoints by tags
@@ -376,7 +364,9 @@ def openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
             operation_copy["parameters"] = merged_params
 
             # Convert to Postman item
-            item = openapi_operation_to_postman_item(path, method, operation_copy, base_url)
+            item = openapi_operation_to_postman_item(
+                path, method, operation_copy, base_url
+            )
 
             # Group by tag
             tags = ensure_list(operation.get("tags", []))
@@ -390,10 +380,7 @@ def openapi_to_postman(openapi_data: Dict[str, Any]) -> Dict[str, Any]:
 
     # Build collection items with folders for tags
     for tag_name in sorted(tag_items.keys()):
-        folder = {
-            "name": tag_name,
-            "item": tag_items[tag_name]
-        }
+        folder = {"name": tag_name, "item": tag_items[tag_name]}
         collection["item"].append(folder)
 
     # Add untagged items at the root level

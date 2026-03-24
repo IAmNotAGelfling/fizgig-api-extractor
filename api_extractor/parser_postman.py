@@ -6,7 +6,7 @@ Parses Postman v2.1 collection files and extracts endpoint information.
 
 from typing import Dict, Any, List, Optional
 
-from api_extractor.utils import safe_get, format_method, extract_path_params, ensure_list
+from api_extractor.utils import format_method, extract_path_params, ensure_list
 
 
 def parse_postman_url(url_data: Any) -> Dict[str, Any]:
@@ -19,13 +19,7 @@ def parse_postman_url(url_data: Any) -> Dict[str, Any]:
     Returns:
         Dictionary with parsed URL information
     """
-    result = {
-        "raw": "",
-        "path": "",
-        "host": "",
-        "protocol": "",
-        "variables": {}
-    }
+    result = {"raw": "", "path": "", "host": "", "protocol": "", "variables": {}}
 
     # Handle string URL
     if isinstance(url_data, str):
@@ -59,7 +53,9 @@ def parse_postman_url(url_data: Any) -> Dict[str, Any]:
         path = "/" + "/".join(str(p) for p in path_segments)
         result["path"] = path
     elif isinstance(path_segments, str):
-        result["path"] = path_segments if path_segments.startswith("/") else f"/{path_segments}"
+        result["path"] = (
+            path_segments if path_segments.startswith("/") else f"/{path_segments}"
+        )
 
     # Extract variables
     variables = url_data.get("variable", [])
@@ -98,22 +94,26 @@ def parse_postman_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
     headers = []
     for header in ensure_list(request_data.get("header", [])):
         if isinstance(header, dict) and not header.get("disabled", False):
-            headers.append({
-                "key": header.get("key", ""),
-                "value": header.get("value", ""),
-                "description": header.get("description", "")
-            })
+            headers.append(
+                {
+                    "key": header.get("key", ""),
+                    "value": header.get("value", ""),
+                    "description": header.get("description", ""),
+                }
+            )
 
     # Extract query parameters
     query_params = []
     if isinstance(url_data, dict):
         for param in ensure_list(url_data.get("query", [])):
             if isinstance(param, dict) and not param.get("disabled", False):
-                query_params.append({
-                    "key": param.get("key", ""),
-                    "value": param.get("value", ""),
-                    "description": param.get("description", "")
-                })
+                query_params.append(
+                    {
+                        "key": param.get("key", ""),
+                        "value": param.get("value", ""),
+                        "description": param.get("description", ""),
+                    }
+                )
 
     # Extract body
     body = None
@@ -121,10 +121,7 @@ def parse_postman_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(body_data, dict):
         mode = body_data.get("mode", "")
         if mode:
-            body = {
-                "mode": mode,
-                "content": body_data.get(mode, "")
-            }
+            body = {"mode": mode, "content": body_data.get(mode, "")}
 
     # Extract path parameters
     path_params = extract_path_params(url_info["path"])
@@ -136,11 +133,13 @@ def parse_postman_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
         "headers": headers,
         "query_params": query_params,
         "path_params": path_params,
-        "body": body
+        "body": body,
     }
 
 
-def parse_postman_item(item: Dict[str, Any], parent_path: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+def parse_postman_item(
+    item: Dict[str, Any], parent_path: Optional[List[str]] = None
+) -> List[Dict[str, Any]]:
     """
     Parse a Postman collection item (folder or request).
 
@@ -185,32 +184,33 @@ def parse_postman_item(item: Dict[str, Any], parent_path: Optional[List[str]] = 
 
         # Add path parameters
         for param_name in request_info["path_params"]:
-            params.append({
-                "name": param_name,
-                "in": "path",
-                "required": True,
-                "type": "string"
-            })
+            params.append(
+                {"name": param_name, "in": "path", "required": True, "type": "string"}
+            )
 
         # Add query parameters
         for qp in request_info["query_params"]:
-            params.append({
-                "name": qp["key"],
-                "in": "query",
-                "required": False,
-                "type": "string",
-                "description": qp["description"]
-            })
+            params.append(
+                {
+                    "name": qp["key"],
+                    "in": "query",
+                    "required": False,
+                    "type": "string",
+                    "description": qp["description"],
+                }
+            )
 
         # Add header parameters
         for header in request_info["headers"]:
-            params.append({
-                "name": header["key"],
-                "in": "header",
-                "required": False,
-                "type": "string",
-                "description": header["description"]
-            })
+            params.append(
+                {
+                    "name": header["key"],
+                    "in": "header",
+                    "required": False,
+                    "type": "string",
+                    "description": header["description"],
+                }
+            )
 
         # Build endpoint dictionary
         endpoint = {
@@ -225,8 +225,8 @@ def parse_postman_item(item: Dict[str, Any], parent_path: Optional[List[str]] = 
                 "host": request_info["url"]["host"],
                 "protocol": request_info["url"]["protocol"],
                 "variables": request_info["url"]["variables"],
-                "body": request_info["body"]
-            }
+                "body": request_info["body"],
+            },
         }
 
         endpoints.append(endpoint)

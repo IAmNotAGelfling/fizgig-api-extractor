@@ -2,8 +2,6 @@
 Tests for utility functions.
 """
 
-import pytest
-
 from api_extractor.utils import (
     safe_get,
     slugify,
@@ -89,7 +87,10 @@ class TestNormaliseUrl:
 
     def test_normalise_with_base(self):
         """Test URL normalisation with base URL."""
-        assert normalise_url("/api/users", "https://example.com") == "https://example.com/api/users"
+        assert (
+            normalise_url("/api/users", "https://example.com")
+            == "https://example.com/api/users"
+        )
 
     def test_normalise_absolute_url(self):
         """Test that absolute URLs are unchanged."""
@@ -102,7 +103,10 @@ class TestNormaliseUrl:
 
     def test_normalise_no_leading_slash(self):
         """Test URL without leading slash."""
-        assert normalise_url("api/users", "https://example.com") == "https://example.com/api/users"
+        assert (
+            normalise_url("api/users", "https://example.com")
+            == "https://example.com/api/users"
+        )
 
 
 class TestStripEmpty:

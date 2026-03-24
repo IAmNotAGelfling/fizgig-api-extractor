@@ -2,8 +2,6 @@
 Tests for format conversion.
 """
 
-import pytest
-
 from api_extractor.converter import (
     openapi_path_to_postman,
     openapi_parameter_to_postman,
@@ -43,7 +41,7 @@ class TestOpenapiParameterToPostman:
             "name": "page",
             "in": "query",
             "schema": {"type": "integer", "example": 1},
-            "description": "Page number"
+            "description": "Page number",
         }
         result = openapi_parameter_to_postman(param)
         assert result["key"] == "page"
@@ -52,11 +50,7 @@ class TestOpenapiParameterToPostman:
 
     def test_convert_param_without_example(self):
         """Test converting parameter without example."""
-        param = {
-            "name": "filter",
-            "in": "query",
-            "schema": {"type": "string"}
-        }
+        param = {"name": "filter", "in": "query", "schema": {"type": "string"}}
         result = openapi_parameter_to_postman(param)
         assert result["key"] == "filter"
         assert result["value"] == ""
@@ -74,8 +68,8 @@ class TestOpenapiRequestBodyToPostman:
                         "type": "object",
                         "properties": {
                             "name": {"type": "string"},
-                            "age": {"type": "integer"}
-                        }
+                            "age": {"type": "integer"},
+                        },
                     }
                 }
             }
@@ -93,8 +87,8 @@ class TestOpenapiRequestBodyToPostman:
                         "type": "object",
                         "properties": {
                             "username": {"type": "string"},
-                            "password": {"type": "string"}
-                        }
+                            "password": {"type": "string"},
+                        },
                     }
                 }
             }
@@ -111,14 +105,9 @@ class TestOpenapiRequestBodyToPostman:
                     "schema": {
                         "type": "object",
                         "properties": {
-                            "file": {
-                                "type": "string",
-                                "format": "binary"
-                            },
-                            "description": {
-                                "type": "string"
-                            }
-                        }
+                            "file": {"type": "string", "format": "binary"},
+                            "description": {"type": "string"},
+                        },
                     }
                 }
             }
@@ -147,10 +136,7 @@ class TestGenerateExampleFromSchema:
         """Test generating object example."""
         schema = {
             "type": "object",
-            "properties": {
-                "name": {"type": "string"},
-                "age": {"type": "integer"}
-            }
+            "properties": {"name": {"type": "string"}, "age": {"type": "integer"}},
         }
         result = generate_example_from_schema(schema)
         assert isinstance(result, dict)
@@ -159,19 +145,13 @@ class TestGenerateExampleFromSchema:
 
     def test_generate_array_example(self):
         """Test generating array example."""
-        schema = {
-            "type": "array",
-            "items": {"type": "string"}
-        }
+        schema = {"type": "array", "items": {"type": "string"}}
         result = generate_example_from_schema(schema)
         assert isinstance(result, list)
 
     def test_use_explicit_example(self):
         """Test using explicit example from schema."""
-        schema = {
-            "type": "string",
-            "example": "custom-value"
-        }
+        schema = {"type": "string", "example": "custom-value"}
         result = generate_example_from_schema(schema)
         assert result == "custom-value"
 
@@ -183,19 +163,16 @@ class TestOpenapiToPostman:
         """Test converting basic OpenAPI spec."""
         openapi_data = {
             "openapi": "3.0.3",
-            "info": {
-                "title": "Test API",
-                "version": "1.0.0"
-            },
+            "info": {"title": "Test API", "version": "1.0.0"},
             "servers": [{"url": "https://api.example.com"}],
             "paths": {
                 "/users": {
                     "get": {
                         "summary": "List users",
-                        "responses": {"200": {"description": "Success"}}
+                        "responses": {"200": {"description": "Success"}},
                     }
                 }
-            }
+            },
         }
 
         result = openapi_to_postman(openapi_data)
@@ -216,17 +193,17 @@ class TestOpenapiToPostman:
                     "get": {
                         "tags": ["Users"],
                         "summary": "List users",
-                        "responses": {"200": {"description": "Success"}}
+                        "responses": {"200": {"description": "Success"}},
                     }
                 },
                 "/posts": {
                     "get": {
                         "tags": ["Posts"],
                         "summary": "List posts",
-                        "responses": {"200": {"description": "Success"}}
+                        "responses": {"200": {"description": "Success"}},
                     }
-                }
-            }
+                },
+            },
         }
 
         result = openapi_to_postman(openapi_data)
@@ -249,13 +226,13 @@ class TestOpenapiToPostman:
                             {
                                 "name": "page",
                                 "in": "query",
-                                "schema": {"type": "integer"}
+                                "schema": {"type": "integer"},
                             }
                         ],
-                        "responses": {"200": {"description": "Success"}}
+                        "responses": {"200": {"description": "Success"}},
                     }
                 }
-            }
+            },
         }
 
         result = openapi_to_postman(openapi_data)
@@ -277,7 +254,7 @@ class TestOpenapiToPostman:
         openapi_data = {
             "openapi": "3.0.3",
             "info": {"title": "Empty API", "version": "1.0.0"},
-            "paths": {}
+            "paths": {},
         }
 
         result = openapi_to_postman(openapi_data)

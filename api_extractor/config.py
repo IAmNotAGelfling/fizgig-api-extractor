@@ -6,11 +6,12 @@ Handles loading, validating, and executing config-based exports.
 
 import json
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 
 
 class ConfigError(Exception):
     """Raised when config is invalid."""
+
     pass
 
 
@@ -54,7 +55,7 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {config_path}")
 
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         config = json.load(f)
 
     # Validate
@@ -100,7 +101,9 @@ def validate_config(config: Dict[str, Any]) -> None:
         if format_value not in valid_formats:
             # Provide suggestion
             suggestions = [f for f in valid_formats if f.startswith(format_value[:2])]
-            suggestion_text = f" Did you mean '{suggestions[0]}'?" if suggestions else ""
+            suggestion_text = (
+                f" Did you mean '{suggestions[0]}'?" if suggestions else ""
+            )
             raise ConfigError(
                 f"exports[{idx}]: Invalid format '{format_value}' - "
                 f"must be one of: {', '.join(valid_formats)}.{suggestion_text}"
@@ -138,14 +141,11 @@ def validate_config_deep(config: Dict[str, Any], config_dir: Path) -> Dict[str, 
     try:
         validate_config(config)
     except ConfigError as e:
-        return {
-            "valid": False,
-            "errors": [{"path": "config", "message": str(e)}]
-        }
+        return {"valid": False, "errors": [{"path": "config", "message": str(e)}]}
 
     # Check input file exists (if not a URL)
     input_path = config["input"]
-    if not (input_path.startswith('http://') or input_path.startswith('https://')):
+    if not (input_path.startswith("http://") or input_path.startswith("https://")):
         # Try relative to config dir first, then absolute
         resolved_path = None
         if not Path(input_path).is_absolute():
@@ -157,11 +157,13 @@ def validate_config_deep(config: Dict[str, Any], config_dir: Path) -> Dict[str, 
                 resolved_path = Path(input_path)
 
         if resolved_path is None:
-            errors.append({
-                "path": "input",
-                "message": f"Input file not found: {input_path}",
-                "suggestion": f"Checked: {config_dir / input_path}"
-            })
+            errors.append(
+                {
+                    "path": "input",
+                    "message": f"Input file not found: {input_path}",
+                    "suggestion": f"Checked: {config_dir / input_path}",
+                }
+            )
 
     # Check templates exist
     for idx, export in enumerate(config["exports"]):
@@ -193,20 +195,20 @@ def validate_config_deep(config: Dict[str, Any], config_dir: Path) -> Dict[str, 
                     found = True
 
             if not found:
-                errors.append({
-                    "path": f"exports[{idx}].template",
-                    "message": f"Template file not found: {template_path}",
-                    "suggestion": f"Searched in:\n    " + "\n    ".join(tried_paths)
-                })
+                errors.append(
+                    {
+                        "path": f"exports[{idx}].template",
+                        "message": f"Template file not found: {template_path}",
+                        "suggestion": "Searched in:\n    " + "\n    ".join(tried_paths),
+                    }
+                )
 
-    return {
-        "valid": len(errors) == 0,
-        "errors": errors
-    }
+    return {"valid": len(errors) == 0, "errors": errors}
 
 
-def run_exports_from_config(config_path: Optional[str] = None,
-                           cli_overrides: Optional[Dict[str, Any]] = None) -> None:
+def run_exports_from_config(
+    config_path: Optional[str] = None, cli_overrides: Optional[Dict[str, Any]] = None
+) -> None:
     """
     Execute all exports defined in config file.
 
@@ -224,7 +226,12 @@ def run_exports_from_config(config_path: Optional[str] = None,
     from api_extractor.loader import load_api_file
     from api_extractor.parser_postman import parse_postman_collection
     from api_extractor.parser_openapi import parse_openapi_spec
-    from api_extractor.exporter import export_markdown, export_csv, export_json, export_html
+    from api_extractor.exporter import (
+        export_markdown,
+        export_csv,
+        export_json,
+        export_html,
+    )
 
     # Load config
     config = load_config(config_path)
@@ -266,8 +273,8 @@ def run_exports_from_config(config_path: Optional[str] = None,
         field_map = export_cfg.get("fields")
         plain_text = export_cfg.get("plain_text", False)
         template_path = export_cfg.get("template")
-        delimiter = export_cfg.get("delimiter", ',')
-        quoting = export_cfg.get("quoting", 'minimal')
+        delimiter = export_cfg.get("delimiter", ",")
+        quoting = export_cfg.get("quoting", "minimal")
 
         # Apply CLI overrides for format-specific options
         if cli_overrides:
@@ -280,14 +287,23 @@ def run_exports_from_config(config_path: Optional[str] = None,
         if export_format == "markdown" or export_format == "md":
             export_markdown(endpoints, output_path)
         elif export_format == "csv":
-            export_csv(endpoints, output_path, field_map=field_map,
-                      delimiter=delimiter, quoting=quoting)
+            export_csv(
+                endpoints,
+                output_path,
+                field_map=field_map,
+                delimiter=delimiter,
+                quoting=quoting,
+            )
         elif export_format == "json":
-            export_json(endpoints, output_path, plain_text=plain_text,
-                       field_map=field_map)
+            export_json(
+                endpoints, output_path, plain_text=plain_text, field_map=field_map
+            )
         elif export_format == "html":
-            export_html(endpoints, output_path, template_path=template_path,
-                       config_dir=config_dir)
+            export_html(
+                endpoints,
+                output_path,
+                template_path=template_path,
+                config_dir=config_dir,
+            )
         else:
             raise ValueError(f"Unknown format: {export_format}")
-

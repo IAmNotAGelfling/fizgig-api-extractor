@@ -44,6 +44,7 @@ class TestLoadCustomTemplate:
             template_path.write_text(template_content)
 
             import os
+
             old_cwd = os.getcwd()
             os.chdir(tmpdir)
 
@@ -143,7 +144,7 @@ class TestPrepareTemplateData:
                 "path": "/api/users",
                 "description": "Get all users",
                 "params": [],
-                "metadata": {}
+                "metadata": {},
             }
         ]
 
@@ -170,7 +171,7 @@ class TestPrepareTemplateData:
                 "path": "/api/users",
                 "description": "Get **all** users",
                 "params": [],
-                "metadata": {}
+                "metadata": {},
             }
         ]
 
@@ -192,7 +193,7 @@ class TestPrepareTemplateData:
                 "path": "/api/old",
                 "description": "",
                 "params": [],
-                "metadata": {"deprecated": True}
+                "metadata": {"deprecated": True},
             }
         ]
 
@@ -218,10 +219,10 @@ class TestPrepareTemplateData:
                         "in": "query",
                         "type": "integer",
                         "required": False,
-                        "description": "Page number"
+                        "description": "Page number",
                     }
                 ],
-                "metadata": {}
+                "metadata": {},
             }
         ]
 
@@ -244,7 +245,7 @@ class TestPrepareTemplateData:
                 "path": "{{baseUrl}}/api/users/{{id}}",
                 "description": "",
                 "params": [],
-                "metadata": {}
+                "metadata": {},
             }
         ]
 
@@ -270,7 +271,7 @@ class TestRenderHtmlTemplate:
                 "path": "/api/users",
                 "description": "Get all users",
                 "params": [],
-                "metadata": {}
+                "metadata": {},
             }
         ]
 
@@ -293,15 +294,19 @@ class TestRenderHtmlTemplate:
             template_path.write_text(template_content)
 
             endpoints = [
-                {"group": "Users", "name": "Test", "method": "GET",
-                 "path": "/test", "description": "", "params": [], "metadata": {}}
+                {
+                    "group": "Users",
+                    "name": "Test",
+                    "method": "GET",
+                    "path": "/test",
+                    "description": "",
+                    "params": [],
+                    "metadata": {},
+                }
             ]
 
             # Act
-            html = render_html_template(
-                endpoints,
-                template_path=str(template_path)
-            )
+            html = render_html_template(endpoints, template_path=str(template_path))
 
             # Assert
             assert "1 endpoints" in html

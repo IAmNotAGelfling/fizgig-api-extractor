@@ -5,7 +5,6 @@ Tests for Postman collection parser.
 import json
 from pathlib import Path
 
-import pytest
 
 from api_extractor.parser_postman import (
     parse_postman_url,
@@ -31,7 +30,7 @@ class TestParsePostmanUrl:
             "raw": "https://api.example.com/users",
             "protocol": "https",
             "host": ["api", "example", "com"],
-            "path": ["users"]
+            "path": ["users"],
         }
         result = parse_postman_url(url_obj)
         assert result["raw"] == "https://api.example.com/users"
@@ -45,9 +44,7 @@ class TestParsePostmanUrl:
             "raw": "https://api.example.com/users/{{userId}}",
             "host": ["api", "example", "com"],
             "path": ["users", "{{userId}}"],
-            "variable": [
-                {"key": "userId", "value": "123"}
-            ]
+            "variable": [{"key": "userId", "value": "123"}],
         }
         result = parse_postman_url(url_obj)
         assert result["variables"]["userId"] == "123"
@@ -58,10 +55,7 @@ class TestParsePostmanRequest:
 
     def test_parse_get_request(self):
         """Test parsing GET request."""
-        request = {
-            "method": "GET",
-            "url": "https://api.example.com/users"
-        }
+        request = {"method": "GET", "url": "https://api.example.com/users"}
         result = parse_postman_request(request)
         assert result["method"] == "GET"
         assert result["url"]["raw"] == "https://api.example.com/users"
@@ -71,9 +65,7 @@ class TestParsePostmanRequest:
         request = {
             "method": "GET",
             "url": "https://api.example.com/users",
-            "header": [
-                {"key": "Authorization", "value": "Bearer token"}
-            ]
+            "header": [{"key": "Authorization", "value": "Bearer token"}],
         }
         result = parse_postman_request(request)
         assert len(result["headers"]) == 1
@@ -87,10 +79,8 @@ class TestParsePostmanRequest:
                 "raw": "https://api.example.com/users?page=1",
                 "host": ["api", "example", "com"],
                 "path": ["users"],
-                "query": [
-                    {"key": "page", "value": "1", "description": "Page number"}
-                ]
-            }
+                "query": [{"key": "page", "value": "1", "description": "Page number"}],
+            },
         }
         result = parse_postman_request(request)
         assert len(result["query_params"]) == 1
@@ -101,10 +91,7 @@ class TestParsePostmanRequest:
         request = {
             "method": "POST",
             "url": "https://api.example.com/users",
-            "body": {
-                "mode": "raw",
-                "raw": '{"name": "John"}'
-            }
+            "body": {"mode": "raw", "raw": '{"name": "John"}'},
         }
         result = parse_postman_request(request)
         assert result["body"]["mode"] == "raw"
@@ -117,10 +104,7 @@ class TestParsePostmanItem:
         """Test parsing simple request item."""
         item = {
             "name": "Get User",
-            "request": {
-                "method": "GET",
-                "url": "https://api.example.com/users/123"
-            }
+            "request": {"method": "GET", "url": "https://api.example.com/users/123"},
         }
         endpoints = parse_postman_item(item)
         assert len(endpoints) == 1
@@ -132,15 +116,9 @@ class TestParsePostmanItem:
         item = {
             "name": "Users",
             "item": [
-                {
-                    "name": "List Users",
-                    "request": {"method": "GET", "url": "/users"}
-                },
-                {
-                    "name": "Create User",
-                    "request": {"method": "POST", "url": "/users"}
-                }
-            ]
+                {"name": "List Users", "request": {"method": "GET", "url": "/users"}},
+                {"name": "Create User", "request": {"method": "POST", "url": "/users"}},
+            ],
         }
         endpoints = parse_postman_item(item)
         assert len(endpoints) == 2
@@ -157,11 +135,11 @@ class TestParsePostmanItem:
                     "item": [
                         {
                             "name": "Get User",
-                            "request": {"method": "GET", "url": "/users/1"}
+                            "request": {"method": "GET", "url": "/users/1"},
                         }
-                    ]
+                    ],
                 }
-            ]
+            ],
         }
         endpoints = parse_postman_item(item)
         assert len(endpoints) == 1
@@ -192,10 +170,7 @@ class TestParsePostmanCollection:
 
     def test_parse_empty_collection(self):
         """Test parsing empty collection."""
-        data = {
-            "info": {"name": "Empty API"},
-            "item": []
-        }
+        data = {"info": {"name": "Empty API"}, "item": []}
         endpoints = parse_postman_collection(data)
         assert len(endpoints) == 0
 
@@ -210,11 +185,11 @@ class TestParsePostmanCollection:
                         "method": "GET",
                         "url": {
                             "raw": "https://api.example.com/users/:id",
-                            "path": ["users", ":id"]
-                        }
-                    }
+                            "path": ["users", ":id"],
+                        },
+                    },
                 }
-            ]
+            ],
         }
         endpoints = parse_postman_collection(data)
         assert len(endpoints) == 1

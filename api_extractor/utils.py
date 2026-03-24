@@ -5,7 +5,7 @@ Provides general-purpose helper functions used throughout the package.
 """
 
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union
 
 
 def safe_get(data: Any, *keys: str, default: Any = None) -> Any:
@@ -62,13 +62,13 @@ def slugify(text: str) -> str:
     text = text.lower()
 
     # Replace non-alphanumeric characters with hyphens
-    text = re.sub(r'[^a-z0-9]+', '-', text)
+    text = re.sub(r"[^a-z0-9]+", "-", text)
 
     # Remove leading/trailing hyphens
-    text = text.strip('-')
+    text = text.strip("-")
 
     # Replace multiple consecutive hyphens with single hyphen
-    text = re.sub(r'-+', '-', text)
+    text = re.sub(r"-+", "-", text)
 
     return text
 
@@ -117,18 +117,18 @@ def normalise_url(url: str, base_url: str = "") -> str:
         return base_url or ""
 
     # If URL is already absolute, return as-is
-    if url.startswith(('http://', 'https://', '//')):
+    if url.startswith(("http://", "https://", "//")):
         return url
 
     # If no base URL provided, return the path
     if not base_url:
-        return url if url.startswith('/') else f"/{url}"
+        return url if url.startswith("/") else f"/{url}"
 
     # Remove trailing slash from base_url
-    base_url = base_url.rstrip('/')
+    base_url = base_url.rstrip("/")
 
     # Add leading slash to url if needed
-    if not url.startswith('/'):
+    if not url.startswith("/"):
         url = f"/{url}"
 
     return f"{base_url}{url}"
@@ -186,13 +186,13 @@ def extract_path_params(path: str) -> List[str]:
 
     # Remove Postman double-brace variables {{variable}} first
     # These are template variables, not path parameters
-    cleaned_path = re.sub(r'\{\{[^}]+\}\}', '', path)
+    cleaned_path = re.sub(r"\{\{[^}]+\}\}", "", path)
 
     # Extract {param} style parameters (OpenAPI) - single braces only
-    params.extend(re.findall(r'\{([^}]+)\}', cleaned_path))
+    params.extend(re.findall(r"\{([^}]+)\}", cleaned_path))
 
     # Extract :param style parameters (Postman/Express)
-    params.extend(re.findall(r':([a-zA-Z_][a-zA-Z0-9_]*)', cleaned_path))
+    params.extend(re.findall(r":([a-zA-Z_][a-zA-Z0-9_]*)", cleaned_path))
 
     return params
 
@@ -235,10 +235,12 @@ def truncate_text(text: str, max_length: int = 100, suffix: str = "...") -> str:
     if not text or len(text) <= max_length:
         return text
 
-    return text[:max_length - len(suffix)] + suffix
+    return text[: max_length - len(suffix)] + suffix
 
 
-def group_by_tag(endpoints: List[Dict[str, Any]], tag_key: str = "group") -> Dict[str, List[Dict[str, Any]]]:
+def group_by_tag(
+    endpoints: List[Dict[str, Any]], tag_key: str = "group"
+) -> Dict[str, List[Dict[str, Any]]]:
     """
     Group endpoints by a tag/category.
 

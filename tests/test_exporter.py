@@ -32,10 +32,10 @@ def sample_endpoints():
                     "in": "query",
                     "type": "integer",
                     "required": False,
-                    "description": "Page number"
+                    "description": "Page number",
                 }
             ],
-            "metadata": {}
+            "metadata": {},
         },
         {
             "group": "Users",
@@ -49,10 +49,10 @@ def sample_endpoints():
                     "in": "body",
                     "type": "object",
                     "required": True,
-                    "description": "User data"
+                    "description": "User data",
                 }
             ],
-            "metadata": {}
+            "metadata": {},
         },
         {
             "group": "Posts",
@@ -61,8 +61,8 @@ def sample_endpoints():
             "path": "/api/posts",
             "description": "Get all posts",
             "params": [],
-            "metadata": {"deprecated": False}
-        }
+            "metadata": {"deprecated": False},
+        },
     ]
 
 
@@ -71,7 +71,7 @@ class TestExportMarkdown:
 
     def test_export_markdown_basic(self, sample_endpoints):
         """Test basic Markdown export."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -95,7 +95,7 @@ class TestExportMarkdown:
 
     def test_export_markdown_empty(self):
         """Test Markdown export with no endpoints."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -111,7 +111,7 @@ class TestExportCsv:
 
     def test_export_csv_basic(self, sample_endpoints):
         """Test basic CSV export."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -119,10 +119,12 @@ class TestExportCsv:
 
             # Read and verify content
             content = Path(temp_path).read_text()
-            lines = content.strip().split('\n')
+            lines = content.strip().split("\n")
 
             # Check header
-            assert "Group,Name,Method,Path,Description,Parameters,Deprecated" in lines[0]
+            assert (
+                "Group,Name,Method,Path,Description,Parameters,Deprecated" in lines[0]
+            )
 
             # Check data rows (3 endpoints)
             assert len(lines) == 4  # Header + 3 data rows
@@ -137,7 +139,7 @@ class TestExportCsv:
 
     def test_export_csv_with_params(self, sample_endpoints):
         """Test CSV export includes parameters."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -158,7 +160,7 @@ class TestExportJson:
 
     def test_export_json_basic(self, sample_endpoints):
         """Test basic JSON export."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -178,7 +180,7 @@ class TestExportJson:
 
     def test_export_json_pretty(self, sample_endpoints):
         """Test JSON export with pretty formatting."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -193,7 +195,7 @@ class TestExportJson:
 
     def test_export_json_compact(self, sample_endpoints):
         """Test JSON export without pretty formatting."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -214,7 +216,7 @@ class TestExportHtml:
 
     def test_export_html_basic(self, sample_endpoints):
         """Test basic HTML export."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -244,7 +246,7 @@ class TestExportHtml:
 
     def test_export_html_method_styles(self, sample_endpoints):
         """Test HTML export includes method-specific styles."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -262,7 +264,7 @@ class TestExportHtml:
 
     def test_export_html_parameters(self, sample_endpoints):
         """Test HTML export includes parameter tables."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.html', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -284,20 +286,17 @@ class TestFieldMappingIntegration:
 
     def test_csv_export_with_field_mapping(self, sample_endpoints):
         """Test CSV export with custom field mapping."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
             temp_path = f.name
 
         try:
-            field_map = {
-                "method": "HTTP Method",
-                "path": "Endpoint",
-                "name": "Name"
-            }
+            field_map = {"method": "HTTP Method", "path": "Endpoint", "name": "Name"}
             export_csv(sample_endpoints, temp_path, field_map=field_map)
 
             # Read CSV
             import csv
-            with open(temp_path, 'r', encoding='utf-8') as f:
+
+            with open(temp_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
 
@@ -320,18 +319,15 @@ class TestFieldMappingIntegration:
 
     def test_json_export_with_field_mapping(self, sample_endpoints):
         """Test JSON export with custom field mapping."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
 
         try:
-            field_map = {
-                "method": "HTTP Method",
-                "path": "Endpoint"
-            }
+            field_map = {"method": "HTTP Method", "path": "Endpoint"}
             export_json(sample_endpoints, temp_path, field_map=field_map)
 
             # Read JSON
-            with open(temp_path, 'r', encoding='utf-8') as f:
+            with open(temp_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
             # Check data
@@ -351,7 +347,7 @@ class TestFieldMappingIntegration:
 
     def test_csv_export_without_field_mapping(self, sample_endpoints):
         """Test CSV export still works without field mapping."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
             temp_path = f.name
 
         try:
@@ -359,7 +355,8 @@ class TestFieldMappingIntegration:
 
             # Read CSV
             import csv
-            with open(temp_path, 'r', encoding='utf-8') as f:
+
+            with open(temp_path, "r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
 
@@ -373,37 +370,37 @@ class TestFieldMappingIntegration:
 
     def test_csv_export_with_custom_delimiter(self, sample_endpoints):
         """Test CSV export with custom delimiter."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.tsv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as f:
             temp_path = f.name
 
         try:
-            export_csv(sample_endpoints, temp_path, delimiter='\t')
+            export_csv(sample_endpoints, temp_path, delimiter="\t")
 
             # Read content
             content = Path(temp_path).read_text()
 
             # Check tabs are used
-            assert '\t' in content
+            assert "\t" in content
             # Check commas are in data (not delimiters)
-            lines = content.split('\n')
-            assert '\t' in lines[0]  # Header should have tabs
+            lines = content.split("\n")
+            assert "\t" in lines[0]  # Header should have tabs
 
         finally:
             Path(temp_path).unlink()
 
     def test_csv_export_with_quote_all(self, sample_endpoints):
         """Test CSV export with quote all fields."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
             temp_path = f.name
 
         try:
-            export_csv(sample_endpoints, temp_path, quoting='all')
+            export_csv(sample_endpoints, temp_path, quoting="all")
 
             # Read content
             content = Path(temp_path).read_text()
 
             # Check that fields are quoted
-            lines = content.split('\n')
+            lines = content.split("\n")
             header = lines[0]
             # All fields should be quoted
             assert header.startswith('"')
@@ -414,22 +411,24 @@ class TestFieldMappingIntegration:
 
     def test_csv_export_with_field_mapping_and_options(self, sample_endpoints):
         """Test CSV export with field mapping and custom options."""
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.tsv', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as f:
             temp_path = f.name
 
         try:
-            field_map = {
-                "method": "Method",
-                "path": "Path"
-            }
-            export_csv(sample_endpoints, temp_path, field_map=field_map,
-                      delimiter='\t', quoting='all')
+            field_map = {"method": "Method", "path": "Path"}
+            export_csv(
+                sample_endpoints,
+                temp_path,
+                field_map=field_map,
+                delimiter="\t",
+                quoting="all",
+            )
 
             # Read content
             content = Path(temp_path).read_text()
 
             # Check tabs are used
-            assert '\t' in content
+            assert "\t" in content
             # Check fields are quoted
             assert '"Method"' in content
             assert '"Path"' in content
