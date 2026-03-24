@@ -375,6 +375,147 @@ def tree(
         raise typer.Exit(1)
 
 
+@app.command()
+def init(
+    config_only: bool = typer.Option(
+        False,
+        "--config-only",
+        help="Only create config file, skip template"
+    ),
+    template_only: bool = typer.Option(
+        False,
+        "--template-only",
+        help="Only create template, skip config file"
+    ),
+    output_dir: Optional[str] = typer.Option(
+        None,
+        "--output-dir",
+        "-d",
+        help="Output directory (defaults to current directory)"
+    )
+) -> None:
+    """
+    Initialize fizgig-api-extractor with example config and template.
+
+    Creates:
+    - .fizgig-config.json with example configuration
+    - templates/default.html with the default HTML template
+
+    Examples:
+
+        # Create both config and template
+        fizgig-api-extractor init
+
+        # Only create config file
+        fizgig-api-extractor init --config-only
+
+        # Only create template
+        fizgig-api-extractor init --template-only
+
+        # Create in custom directory
+        fizgig-api-extractor init --output-dir ./my-project
+    """
+    try:
+        import importlib.resources as pkg_resources
+        from api_extractor import resources
+
+        # Determine output directory
+        if output_dir:
+            base_dir = Path(output_dir)
+            base_dir.mkdir(parents=True, exist_ok=True)
+        else:
+            base_dir = Path.cwd()
+
+        # Create config file unless --template-only
+        if not template_only:
+            config_path = base_dir / ".fizgig-config.json"
+
+            if config_path.exists():
+                console_err.print(f"[red]✗[/red] Config file already exists: {config_path}")
+                raise typer.Exit(1)
+
+            # Example config structure
+            example_config = {
+                "input": "api.json",
+                "headers": {
+                    "Authorization": "Bearer YOUR_TOKEN_HERE"
+                },
+                "exports": [
+                    {
+                        "format": "markdown",
+                        "output": "docs/api-endpoints.md"
+                    },
+                    {
+                        "format": "csv",
+                        "output": "reports/endpoints.csv",
+                        "delimiter": ",",
+                        "quoting": "minimal",
+                        "fields": {
+                            "method": "HTTP Method",
+                            "path": "Endpoint Path",
+                            "description": "Description"
+                        }
+                    },
+                    {
+                        "format": "json",
+                        "output": "data/endpoints.json",
+                        "plain_text": False,
+                        "fields": {
+                            "name": "endpoint_name",
+                            "method": "http_method",
+                            "path": "url_path"
+                        }
+                    },
+                    {
+                        "format": "html",
+                        "output": "web/api-docs.html",
+                        "template": "templates/custom.html"
+                    }
+                ]
+            }
+
+            with open(config_path, 'w', encoding='utf-8') as f:
+                json.dump(example_config, f, indent=2, ensure_ascii=False)
+
+            console.print(f"[green]✓[/green] Created config file: [bold]{config_path}[/bold]")
+
+        # Create template file unless --config-only
+        if not config_only:
+            template_dir = base_dir / "templates"
+            template_path = template_dir / "default.html"
+
+            if template_path.exists():
+                console_err.print(f"[red]✗[/red] Template file already exists: {template_path}")
+                raise typer.Exit(1)
+
+            template_dir.mkdir(parents=True, exist_ok=True)
+
+            # Load default template from package resources
+            try:
+                template_content = pkg_resources.files(resources).joinpath('templates/default.html').read_text(encoding='utf-8')
+            except Exception:
+                # Fallback for older Python versions
+                with pkg_resources.path(resources, 'templates') as templates_path:
+                    default_template = templates_path / 'default.html'
+                    template_content = default_template.read_text(encoding='utf-8')
+
+            with open(template_path, 'w', encoding='utf-8') as f:
+                f.write(template_content)
+
+            console.print(f"[green]✓[/green] Created template file: [bold]{template_path}[/bold]")
+
+        console.print("\n[bold]Next steps:[/bold]")
+        if not template_only:
+            console.print("1. Edit .fizgig-config.json with your API spec path and export settings")
+        if not config_only:
+            console.print("2. Customize templates/default.html if needed")
+        console.print("3. Run: fizgig-api-extractor extract --config .fizgig-config.json")
+
+    except Exception as e:
+        console_err.print(f"[red]✗[/red] Unexpected error: {e}")
+        raise typer.Exit(1)
+
+
 # Default behavior: if no command is provided, display help
 if __name__ == "__main__":
     app()

@@ -368,3 +368,132 @@ class TestCliUrlSupport:
         # Assert
         assert result.exit_code == 1
         assert "Invalid header format" in result.output
+
+
+class TestCliInit:
+    """Tests for init command."""
+
+    def test_init_both_files(self):
+        """Test init command creates both config and template."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Act
+                result = runner.invoke(app, ["init"])
+
+                # Assert
+                assert result.exit_code == 0
+                assert Path(".fizgig-config.json").exists()
+                assert Path("templates/default.html").exists()
+
+                # Verify config content
+                with open(".fizgig-config.json") as f:
+                    config = json.load(f)
+                assert "input" in config
+                assert "exports" in config
+
+                # Verify template content
+                template_content = Path("templates/default.html").read_text()
+                assert "<!DOCTYPE html>" in template_content
+                assert "{{total_endpoints}}" in template_content
+
+            finally:
+                os.chdir(old_cwd)
+
+    def test_init_config_only(self):
+        """Test init command with --config-only flag."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Act
+                result = runner.invoke(app, ["init", "--config-only"])
+
+                # Assert
+                assert result.exit_code == 0
+                assert Path(".fizgig-config.json").exists()
+                assert not Path("templates/default.html").exists()
+
+            finally:
+                os.chdir(old_cwd)
+
+    def test_init_template_only(self):
+        """Test init command with --template-only flag."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Act
+                result = runner.invoke(app, ["init", "--template-only"])
+
+                # Assert
+                assert result.exit_code == 0
+                assert not Path(".fizgig-config.json").exists()
+                assert Path("templates/default.html").exists()
+
+            finally:
+                os.chdir(old_cwd)
+
+    def test_init_custom_output_dir(self):
+        """Test init command with --output-dir flag."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "custom"
+
+            # Act
+            result = runner.invoke(app, ["init", "--output-dir", str(output_dir)])
+
+            # Assert
+            assert result.exit_code == 0
+            assert (output_dir / ".fizgig-config.json").exists()
+            assert (output_dir / "templates" / "default.html").exists()
+
+    def test_init_existing_config_file(self):
+        """Test init command when config file already exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Arrange - create existing config
+                Path(".fizgig-config.json").write_text('{"input": "existing"}')
+
+                # Act
+                result = runner.invoke(app, ["init"])
+
+                # Assert
+                assert result.exit_code == 1
+                assert "already exists" in result.output
+
+            finally:
+                os.chdir(old_cwd)
+
+    def test_init_existing_template_file(self):
+        """Test init command when template file already exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Arrange - create existing template
+                templates_dir = Path("templates")
+                templates_dir.mkdir()
+                (templates_dir / "default.html").write_text("<html>existing</html>")
+
+                # Act
+                result = runner.invoke(app, ["init"])
+
+                # Assert
+                assert result.exit_code == 1
+                assert "already exists" in result.output
+
+            finally:
+                os.chdir(old_cwd)
