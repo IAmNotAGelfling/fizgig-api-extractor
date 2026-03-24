@@ -28,6 +28,8 @@ dependencies = [
     "rich>=13.0.0",
     "pyyaml>=6.0",
     "mistune>=3.0.0",
+    "requests>=2.31.0",
+    "chevron>=0.14.0",
 ]
 
 [project.optional-dependencies]
@@ -35,6 +37,7 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "bump-my-version>=0.16.0",
+    "responses>=0.24.0",
 ]
 
 [project.scripts]

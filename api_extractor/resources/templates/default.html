@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Endpoints</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007acc;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #555;
+            margin-top: 30px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .endpoint {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+        }
+        .method.GET { background-color: #61affe; }
+        .method.POST { background-color: #49cc90; }
+        .method.PUT { background-color: #fca130; }
+        .method.PATCH { background-color: #50e3c2; }
+        .method.DELETE { background-color: #f93e3e; }
+        .method.HEAD { background-color: #9012fe; }
+        .method.OPTIONS { background-color: #0d5aa7; }
+        .path {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: #333;
+        }
+        .endpoint-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .description {
+            color: #666;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        .description a {
+            color: #007acc;
+            text-decoration: none;
+        }
+        .description a:hover {
+            text-decoration: underline;
+        }
+        .description code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .description strong {
+            font-weight: 600;
+            color: #333;
+        }
+        .deprecated {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #ff6b6b;
+            color: white;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th {
+            background-color: #f0f0f0;
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+            font-weight: 600;
+        }
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        .param-name {
+            font-family: 'Courier New', monospace;
+            color: #007acc;
+        }
+        .required {
+            color: #f93e3e;
+            font-weight: bold;
+        }
+        .optional {
+            color: #999;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .badge.path { background-color: #e3f2fd; color: #1976d2; }
+        .badge.query { background-color: #f3e5f5; color: #7b1fa2; }
+        .badge.header { background-color: #e8f5e9; color: #388e3c; }
+        .badge.body { background-color: #fff3e0; color: #f57c00; }
+        .summary {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Endpoints</h1>
+    <div class="summary">
+        <strong>Total endpoints:</strong> {{total_endpoints}}<br>
+        {{#generated_at}}
+        <strong>Generated:</strong> {{generated_at}}<br>
+        {{/generated_at}}
+        {{#source_file}}
+        <strong>Source:</strong> {{source_file}}{{#source_format}} ({{source_format}}){{/source_format}}
+        {{/source_file}}
+    </div>
+
+    {{#groups}}
+    <h2>{{name}}</h2>
+    <p><em>{{count}} endpoint(s)</em></p>
+
+    {{#endpoints}}
+    <div class="endpoint">
+        <div class="endpoint-header">
+            <span class="method {{method}}">{{method}}</span>
+            <span class="path">{{path}}</span>
+            {{#deprecated}}
+            <span class="deprecated">DEPRECATED</span>
+            {{/deprecated}}
+        </div>
+        <div class="endpoint-name">{{name}}</div>
+
+        {{#description}}
+        <div class="description">{{{description}}}</div>
+        {{/description}}
+
+        {{#params}}
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>In</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#params}}
+                <tr>
+                    <td class="param-name">{{name}}</td>
+                    <td><span class="badge {{in}}">{{in}}</span></td>
+                    <td>{{type}}</td>
+                    <td class="{{#required}}required{{/required}}{{^required}}optional{{/required}}">
+                        {{#required}}Yes{{/required}}{{^required}}No{{/required}}
+                    </td>
+                    <td>{{description}}</td>
+                </tr>
+                {{/params}}
+            </tbody>
+        </table>
+        {{/params}}
+    </div>
+    {{/endpoints}}
+    {{/groups}}
+</body>
+</html>

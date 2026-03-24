@@ -7,7 +7,7 @@ Exports parsed endpoints to multiple formats: Markdown, CSV, JSON, HTML.
 import json
 import csv
 import re
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 import mistune
@@ -168,22 +168,62 @@ def export_markdown(endpoints: List[Dict[str, Any]], output_path: str) -> None:
         f.writelines(lines)
 
 
-def export_csv(endpoints: List[Dict[str, Any]], output_path: str) -> None:
+def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
+               field_map: Dict[str, str] = None, delimiter: str = ',',
+               quoting: str = 'minimal') -> None:
     """
     Export endpoints to CSV format.
 
     Args:
         endpoints: List of endpoint dictionaries
         output_path: Output file path
+        field_map: Optional field mapping for custom field selection/renaming
+        delimiter: CSV delimiter character (default: ',')
+        quoting: Quoting style - 'minimal', 'all', 'nonnumeric', 'none' (default: 'minimal')
 
     Example:
         >>> export_csv(endpoints, "api_endpoints.csv")
+        >>> export_csv(endpoints, "api.csv", {"method": "HTTP Method", "path": "Endpoint"})
+        >>> export_csv(endpoints, "api.tsv", delimiter='\\t')
+        >>> export_csv(endpoints, "api.csv", quoting='all')
     """
+    from api_extractor.field_mapper import apply_field_mapping
+
+    # Map quoting parameter to csv module constants
+    quoting_map = {
+        'minimal': csv.QUOTE_MINIMAL,
+        'all': csv.QUOTE_ALL,
+        'nonnumeric': csv.QUOTE_NONNUMERIC,
+        'none': csv.QUOTE_NONE
+    }
+    csv_quoting = quoting_map.get(quoting.lower(), csv.QUOTE_MINIMAL)
+
+    # Apply field mapping if provided
+    if field_map:
+        endpoints = apply_field_mapping(endpoints, field_map)
+
+        # Export mapped fields
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(output_file, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f, delimiter=delimiter, quoting=csv_quoting)
+
+            # Write header from mapped field names
+            writer.writerow(list(field_map.values()))
+
+            # Write data
+            for endpoint in endpoints:
+                writer.writerow(list(endpoint.values()))
+
+        return
+
+    # Default behavior (no field mapping)
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_file, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, delimiter=delimiter, quoting=csv_quoting)
 
         # Write header
         writer.writerow([
@@ -234,7 +274,8 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str) -> None:
             ])
 
 
-def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool = True, plain_text: bool = False) -> None:
+def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool = True,
+                plain_text: bool = False, field_map: Dict[str, str] = None) -> None:
     """
     Export endpoints to JSON format.
 
@@ -243,16 +284,24 @@ def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool 
         output_path: Output file path
         pretty: Whether to pretty-print JSON (default: True)
         plain_text: Whether to convert markdown descriptions to plain text (default: False)
+        field_map: Optional field mapping for custom field selection/renaming
 
     Example:
         >>> export_json(endpoints, "api_endpoints.json")
         >>> export_json(endpoints, "api_endpoints.json", plain_text=True)
+        >>> export_json(endpoints, "api.json", field_map={"method": "HTTP Method"})
     """
+    from api_extractor.field_mapper import apply_field_mapping
+
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
+    # Apply field mapping if provided
+    if field_map:
+        endpoints = apply_field_mapping(endpoints, field_map)
+
     # If plain_text is requested, strip markdown from descriptions
-    if plain_text:
+    if plain_text and not field_map:  # Only strip if not using custom fields
         endpoints = [
             {
                 **endpoint,
@@ -275,16 +324,53 @@ def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool 
             json.dump(endpoints, f, ensure_ascii=False)
 
 
-def export_html(endpoints: List[Dict[str, Any]], output_path: str) -> None:
+def export_html(endpoints: List[Dict[str, Any]], output_path: str,
+                template_path: Optional[str] = None,
+                config_dir: Optional[Path] = None) -> None:
     """
-    Export endpoints to HTML format.
+    Export endpoints to HTML format using template.
 
     Args:
         endpoints: List of endpoint dictionaries
         output_path: Output file path
+        template_path: Optional custom template path
+        config_dir: Config directory for template resolution
 
     Example:
         >>> export_html(endpoints, "api_endpoints.html")
+        >>> export_html(endpoints, "api.html", template_path="custom.html")
+    """
+    from api_extractor.templating import render_html_template
+
+    # Extract source info from output path
+    source_file = Path(output_path).stem
+
+    # Render HTML using template
+    html = render_html_template(
+        endpoints=endpoints,
+        source_file=source_file,
+        source_format="unknown",
+        template_path=template_path,
+        config_dir=config_dir
+    )
+
+    # Write to file
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+
+def export_html_legacy(endpoints: List[Dict[str, Any]], output_path: str) -> None:
+    """
+    LEGACY: Export endpoints to HTML format (hardcoded version).
+
+    Kept for reference. New code should use export_html() which uses templates.
+
+    Args:
+        endpoints: List of endpoint dictionaries
+        output_path: Output file path
     """
     # Group endpoints by category
     grouped = group_by_tag(endpoints, "group")

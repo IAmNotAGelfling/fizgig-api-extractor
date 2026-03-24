@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+import responses
 from typer.testing import CliRunner
 
 from api_extractor.cli import app
@@ -258,3 +259,241 @@ class TestCliConvert:
         finally:
             if Path(output_path).exists():
                 Path(output_path).unlink()
+
+
+class TestCliUrlSupport:
+    """Tests for URL fetching in CLI."""
+
+    @responses.activate
+    def test_extract_from_url(self):
+        """Test extracting from URL."""
+        # Arrange
+        url = "https://api.example.com/openapi.json"
+        spec = {
+            "openapi": "3.0.0",
+            "info": {"title": "Test API", "version": "1.0.0"},
+            "paths": {
+                "/test": {
+                    "get": {
+                        "summary": "Test endpoint",
+                        "responses": {"200": {"description": "OK"}}
+                    }
+                }
+            }
+        }
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        # Act
+        result = runner.invoke(app, ["extract", url])
+
+        # Assert
+        assert result.exit_code == 0
+        assert "openapi" in result.output.lower()
+        assert "1 endpoint(s)" in result.output
+
+    @responses.activate
+    def test_extract_from_url_with_header(self):
+        """Test extracting from URL with custom header."""
+        # Arrange
+        url = "https://api.example.com/spec.json"
+        spec = {"openapi": "3.0.0", "info": {}, "paths": {}}
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        # Act
+        result = runner.invoke(app, [
+            "extract",
+            url,
+            "--header", "Authorization: Bearer token123"
+        ])
+
+        # Assert
+        assert result.exit_code == 0
+        assert len(responses.calls) == 1
+        assert responses.calls[0].request.headers["Authorization"] == "Bearer token123"
+
+    @responses.activate
+    def test_extract_from_url_with_multiple_headers(self):
+        """Test extracting from URL with multiple headers."""
+        # Arrange
+        url = "https://api.example.com/spec.json"
+        spec = {"openapi": "3.0.0", "info": {}, "paths": {}}
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        # Act
+        result = runner.invoke(app, [
+            "extract",
+            url,
+            "--header", "Authorization: Bearer token123",
+            "--header", "X-API-Version: v2"
+        ])
+
+        # Assert
+        assert result.exit_code == 0
+        assert len(responses.calls) == 1
+        assert responses.calls[0].request.headers["Authorization"] == "Bearer token123"
+        assert responses.calls[0].request.headers["X-API-Version"] == "v2"
+
+    @responses.activate
+    def test_extract_from_url_with_save(self):
+        """Test extracting from URL with save functionality."""
+        # Arrange
+        url = "https://api.example.com/openapi.yaml"
+        spec = {"openapi": "3.0.0", "info": {}, "paths": {}}
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            save_path = str(Path(tmpdir) / "saved.json")
+
+            # Act
+            result = runner.invoke(app, [
+                "extract",
+                url,
+                "--save-url", save_path
+            ])
+
+            # Assert
+            assert result.exit_code == 0
+            assert f"Saved to {save_path}" in result.output
+            assert Path(save_path).exists()
+
+    def test_extract_invalid_header_format(self):
+        """Test error on invalid header format."""
+        # Act
+        result = runner.invoke(app, [
+            "extract",
+            "https://api.example.com/spec.json",
+            "--header", "InvalidHeader"
+        ])
+
+        # Assert
+        assert result.exit_code == 1
+        assert "Invalid header format" in result.output
+
+
+class TestCliInit:
+    """Tests for init command."""
+
+    def test_init_both_files(self):
+        """Test init command creates both config and template."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Act
+                result = runner.invoke(app, ["init"])
+
+                # Assert
+                assert result.exit_code == 0
+                assert Path(".fizgig-config.json").exists()
+                assert Path("templates/default.html").exists()
+
+                # Verify config content
+                with open(".fizgig-config.json") as f:
+                    config = json.load(f)
+                assert "input" in config
+                assert "exports" in config
+
+                # Verify template content
+                template_content = Path("templates/default.html").read_text()
+                assert "<!DOCTYPE html>" in template_content
+                assert "{{total_endpoints}}" in template_content
+
+            finally:
+                os.chdir(old_cwd)
+
+    def test_init_config_only(self):
+        """Test init command with --config-only flag."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Act
+                result = runner.invoke(app, ["init", "--config-only"])
+
+                # Assert
+                assert result.exit_code == 0
+                assert Path(".fizgig-config.json").exists()
+                assert not Path("templates/default.html").exists()
+
+            finally:
+                os.chdir(old_cwd)
+
+    def test_init_template_only(self):
+        """Test init command with --template-only flag."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Act
+                result = runner.invoke(app, ["init", "--template-only"])
+
+                # Assert
+                assert result.exit_code == 0
+                assert not Path(".fizgig-config.json").exists()
+                assert Path("templates/default.html").exists()
+
+            finally:
+                os.chdir(old_cwd)
+
+    def test_init_custom_output_dir(self):
+        """Test init command with --output-dir flag."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "custom"
+
+            # Act
+            result = runner.invoke(app, ["init", "--output-dir", str(output_dir)])
+
+            # Assert
+            assert result.exit_code == 0
+            assert (output_dir / ".fizgig-config.json").exists()
+            assert (output_dir / "templates" / "default.html").exists()
+
+    def test_init_existing_config_file(self):
+        """Test init command when config file already exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Arrange - create existing config
+                Path(".fizgig-config.json").write_text('{"input": "existing"}')
+
+                # Act
+                result = runner.invoke(app, ["init"])
+
+                # Assert
+                assert result.exit_code == 1
+                assert "already exists" in result.output
+
+            finally:
+                os.chdir(old_cwd)
+
+    def test_init_existing_template_file(self):
+        """Test init command when template file already exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            import os
+            old_cwd = os.getcwd()
+            os.chdir(tmpdir)
+
+            try:
+                # Arrange - create existing template
+                templates_dir = Path("templates")
+                templates_dir.mkdir()
+                (templates_dir / "default.html").write_text("<html>existing</html>")
+
+                # Act
+                result = runner.invoke(app, ["init"])
+
+                # Assert
+                assert result.exit_code == 1
+                assert "already exists" in result.output
+
+            finally:
+                os.chdir(old_cwd)
