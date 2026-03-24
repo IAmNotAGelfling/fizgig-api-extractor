@@ -28,8 +28,6 @@ app = typer.Typer(
     no_args_is_help=True
 )
 
-import os
-
 # Fix Windows console encoding for Unicode support
 if sys.platform == 'win32':
     sys.stdout.reconfigure(encoding='utf-8')
@@ -182,7 +180,7 @@ def extract(
             # Run exports from config
             console.print(f"[bold]Loading config[/bold] from {config}...")
             run_exports_from_config(config, cli_overrides)
-            console.print(f"[green]✓[/green] All exports completed")
+            console.print("[green]✓[/green] All exports completed")
             return
 
         # Standard CLI-only mode (no config)
@@ -288,7 +286,7 @@ def convert(
             console_err.print(f"[red]✗[/red] Input file is not an OpenAPI spec (detected: {detected_format})")
             raise typer.Exit(1)
 
-        console.print(f"[green]✓[/green] Loaded OpenAPI spec")
+        console.print("[green]✓[/green] Loaded OpenAPI spec")
 
         # Convert to Postman
         console.print("[bold]Converting[/bold] to Postman collection...")
@@ -545,7 +543,7 @@ def validate_config(
         from api_extractor.config import load_config, validate_config_deep
 
         # Load config (auto-discovers if path not specified)
-        console.print(f"[bold]Loading config[/bold]...")
+        console.print("[bold]Loading config[/bold]...")
         try:
             config = load_config(config_path)
         except FileNotFoundError as e:
@@ -561,16 +559,16 @@ def validate_config(
         else:
             config_dir = Path.cwd()
 
-        console.print(f"[green]✓[/green] Config structure valid")
+        console.print("[green]✓[/green] Config structure valid")
 
         # Deep validation (file existence checks)
-        console.print(f"[bold]Validating file references[/bold]...")
+        console.print("[bold]Validating file references[/bold]...")
         validation_result = validate_config_deep(config, config_dir)
 
         if validation_result["valid"]:
-            console.print(f"[green]✓[/green] All file references valid")
-            console.print(f"\n[bold green]Config is valid![/bold green]")
-            console.print(f"\nConfig summary:")
+            console.print("[green]✓[/green] All file references valid")
+            console.print("\n[bold green]Config is valid![/bold green]")
+            console.print("\nConfig summary:")
             console.print(f"  Input: [bold]{config['input']}[/bold]")
             console.print(f"  Exports: [bold]{len(config['exports'])}[/bold] configured")
             return
