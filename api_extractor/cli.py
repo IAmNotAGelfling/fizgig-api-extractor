@@ -7,7 +7,7 @@ Provides command-line interface using Typer.
 import sys
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 import typer
 from rich.console import Console
@@ -92,7 +92,7 @@ def extract(
         "--plain-text",
         help="Convert markdown descriptions to plain text (JSON format only)"
     ),
-    header: Optional[list[str]] = typer.Option(
+    header: Optional[List[str]] = typer.Option(
         None,
         "--header",
         help="Custom HTTP header for URL requests (repeatable, format: 'Name: Value')"
