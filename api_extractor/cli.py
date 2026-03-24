@@ -67,7 +67,7 @@ def main(
 def extract(
     input_file: str = typer.Argument(
         ...,
-        help="Path to Postman collection or OpenAPI spec (JSON/YAML)"
+        help="Path to Postman collection, OpenAPI spec (JSON/YAML), or HTTP(S) URL"
     ),
     output_file: Optional[str] = typer.Option(
         None,
@@ -91,10 +91,20 @@ def extract(
         False,
         "--plain-text",
         help="Convert markdown descriptions to plain text (JSON format only)"
+    ),
+    header: Optional[list[str]] = typer.Option(
+        None,
+        "--header",
+        help="Custom HTTP header for URL requests (repeatable, format: 'Name: Value')"
+    ),
+    save_url: Optional[str] = typer.Option(
+        None,
+        "--save-url",
+        help="Save URL content to file (optional path, defaults to filename from URL)"
     )
 ) -> None:
     """
-    Extract API endpoints from a Postman collection or OpenAPI spec.
+    Extract API endpoints from a Postman collection, OpenAPI spec, or URL.
 
     Examples:
 
@@ -115,11 +125,45 @@ def extract(
 
         # Export to HTML
         fizgig-api-extractor extract api.yaml -o endpoints.html -f html
+
+        # Fetch from URL
+        fizgig-api-extractor extract https://api.example.com/openapi.yaml
+
+        # Fetch from URL with authentication
+        fizgig-api-extractor extract https://api.example.com/spec.json \\
+            --header "Authorization: Bearer token123"
+
+        # Fetch from URL and save locally
+        fizgig-api-extractor extract https://api.example.com/openapi.yaml --save-url
+        fizgig-api-extractor extract https://api.example.com/spec --save-url custom.json
     """
     try:
+        # Parse headers if provided
+        headers_dict = None
+        if header:
+            headers_dict = {}
+            for h in header:
+                if ':' not in h:
+                    console_err.print(f"[red]✗[/red] Invalid header format: '{h}'")
+                    console_err.print("Expected format: 'Name: Value'")
+                    raise typer.Exit(1)
+                name, value = h.split(':', 1)
+                headers_dict[name.strip()] = value.strip()
+
+        # Determine save path for URL
+        save_path = None
+        if save_url is not None:
+            # If save_url is empty string (flag without value), set to None to auto-derive
+            save_path = save_url if save_url else None
+
         # Load and detect format
+        is_url = input_file.startswith('http://') or input_file.startswith('https://')
         console.print(f"[bold]Loading[/bold] {input_file}...")
-        data, detected_format = load_api_file(input_file)
+        data, detected_format = load_api_file(input_file, headers=headers_dict, save_path=save_path)
+
+        if is_url and save_path is not None:
+            console.print(f"[green]✓[/green] Saved to [bold]{save_path}[/bold]")
+
         console.print(f"[green]✓[/green] Detected format: [bold]{detected_format}[/bold]")
 
         # Parse endpoints

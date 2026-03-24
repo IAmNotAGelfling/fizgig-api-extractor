@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+import responses
 from typer.testing import CliRunner
 
 from api_extractor.cli import app
@@ -258,3 +259,112 @@ class TestCliConvert:
         finally:
             if Path(output_path).exists():
                 Path(output_path).unlink()
+
+
+class TestCliUrlSupport:
+    """Tests for URL fetching in CLI."""
+
+    @responses.activate
+    def test_extract_from_url(self):
+        """Test extracting from URL."""
+        # Arrange
+        url = "https://api.example.com/openapi.json"
+        spec = {
+            "openapi": "3.0.0",
+            "info": {"title": "Test API", "version": "1.0.0"},
+            "paths": {
+                "/test": {
+                    "get": {
+                        "summary": "Test endpoint",
+                        "responses": {"200": {"description": "OK"}}
+                    }
+                }
+            }
+        }
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        # Act
+        result = runner.invoke(app, ["extract", url])
+
+        # Assert
+        assert result.exit_code == 0
+        assert "openapi" in result.output.lower()
+        assert "1 endpoint(s)" in result.output
+
+    @responses.activate
+    def test_extract_from_url_with_header(self):
+        """Test extracting from URL with custom header."""
+        # Arrange
+        url = "https://api.example.com/spec.json"
+        spec = {"openapi": "3.0.0", "info": {}, "paths": {}}
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        # Act
+        result = runner.invoke(app, [
+            "extract",
+            url,
+            "--header", "Authorization: Bearer token123"
+        ])
+
+        # Assert
+        assert result.exit_code == 0
+        assert len(responses.calls) == 1
+        assert responses.calls[0].request.headers["Authorization"] == "Bearer token123"
+
+    @responses.activate
+    def test_extract_from_url_with_multiple_headers(self):
+        """Test extracting from URL with multiple headers."""
+        # Arrange
+        url = "https://api.example.com/spec.json"
+        spec = {"openapi": "3.0.0", "info": {}, "paths": {}}
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        # Act
+        result = runner.invoke(app, [
+            "extract",
+            url,
+            "--header", "Authorization: Bearer token123",
+            "--header", "X-API-Version: v2"
+        ])
+
+        # Assert
+        assert result.exit_code == 0
+        assert len(responses.calls) == 1
+        assert responses.calls[0].request.headers["Authorization"] == "Bearer token123"
+        assert responses.calls[0].request.headers["X-API-Version"] == "v2"
+
+    @responses.activate
+    def test_extract_from_url_with_save(self):
+        """Test extracting from URL with save functionality."""
+        # Arrange
+        url = "https://api.example.com/openapi.yaml"
+        spec = {"openapi": "3.0.0", "info": {}, "paths": {}}
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            save_path = str(Path(tmpdir) / "saved.json")
+
+            # Act
+            result = runner.invoke(app, [
+                "extract",
+                url,
+                "--save-url", save_path
+            ])
+
+            # Assert
+            assert result.exit_code == 0
+            assert f"Saved to {save_path}" in result.output
+            assert Path(save_path).exists()
+
+    def test_extract_invalid_header_format(self):
+        """Test error on invalid header format."""
+        # Act
+        result = runner.invoke(app, [
+            "extract",
+            "https://api.example.com/spec.json",
+            "--header", "InvalidHeader"
+        ])
+
+        # Assert
+        assert result.exit_code == 1
+        assert "Invalid header format" in result.output
