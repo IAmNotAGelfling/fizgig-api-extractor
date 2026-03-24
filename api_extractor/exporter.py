@@ -169,7 +169,8 @@ def export_markdown(endpoints: List[Dict[str, Any]], output_path: str) -> None:
 
 
 def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
-               field_map: Dict[str, str] = None) -> None:
+               field_map: Dict[str, str] = None, delimiter: str = ',',
+               quoting: str = 'minimal') -> None:
     """
     Export endpoints to CSV format.
 
@@ -177,12 +178,25 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
         endpoints: List of endpoint dictionaries
         output_path: Output file path
         field_map: Optional field mapping for custom field selection/renaming
+        delimiter: CSV delimiter character (default: ',')
+        quoting: Quoting style - 'minimal', 'all', 'nonnumeric', 'none' (default: 'minimal')
 
     Example:
         >>> export_csv(endpoints, "api_endpoints.csv")
         >>> export_csv(endpoints, "api.csv", {"method": "HTTP Method", "path": "Endpoint"})
+        >>> export_csv(endpoints, "api.tsv", delimiter='\\t')
+        >>> export_csv(endpoints, "api.csv", quoting='all')
     """
     from api_extractor.field_mapper import apply_field_mapping
+
+    # Map quoting parameter to csv module constants
+    quoting_map = {
+        'minimal': csv.QUOTE_MINIMAL,
+        'all': csv.QUOTE_ALL,
+        'nonnumeric': csv.QUOTE_NONNUMERIC,
+        'none': csv.QUOTE_NONE
+    }
+    csv_quoting = quoting_map.get(quoting.lower(), csv.QUOTE_MINIMAL)
 
     # Apply field mapping if provided
     if field_map:
@@ -193,7 +207,7 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
         output_file.parent.mkdir(parents=True, exist_ok=True)
 
         with open(output_file, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.writer(f)
+            writer = csv.writer(f, delimiter=delimiter, quoting=csv_quoting)
 
             # Write header from mapped field names
             writer.writerow(list(field_map.values()))
@@ -209,7 +223,7 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_file, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
+        writer = csv.writer(f, delimiter=delimiter, quoting=csv_quoting)
 
         # Write header
         writer.writerow([

@@ -370,3 +370,69 @@ class TestFieldMappingIntegration:
 
         finally:
             Path(temp_path).unlink()
+
+    def test_csv_export_with_custom_delimiter(self, sample_endpoints):
+        """Test CSV export with custom delimiter."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.tsv', delete=False) as f:
+            temp_path = f.name
+
+        try:
+            export_csv(sample_endpoints, temp_path, delimiter='\t')
+
+            # Read content
+            content = Path(temp_path).read_text()
+
+            # Check tabs are used
+            assert '\t' in content
+            # Check commas are in data (not delimiters)
+            lines = content.split('\n')
+            assert '\t' in lines[0]  # Header should have tabs
+
+        finally:
+            Path(temp_path).unlink()
+
+    def test_csv_export_with_quote_all(self, sample_endpoints):
+        """Test CSV export with quote all fields."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            temp_path = f.name
+
+        try:
+            export_csv(sample_endpoints, temp_path, quoting='all')
+
+            # Read content
+            content = Path(temp_path).read_text()
+
+            # Check that fields are quoted
+            lines = content.split('\n')
+            header = lines[0]
+            # All fields should be quoted
+            assert header.startswith('"')
+            assert '"Group"' in header or '"Method"' in header
+
+        finally:
+            Path(temp_path).unlink()
+
+    def test_csv_export_with_field_mapping_and_options(self, sample_endpoints):
+        """Test CSV export with field mapping and custom options."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.tsv', delete=False) as f:
+            temp_path = f.name
+
+        try:
+            field_map = {
+                "method": "Method",
+                "path": "Path"
+            }
+            export_csv(sample_endpoints, temp_path, field_map=field_map,
+                      delimiter='\t', quoting='all')
+
+            # Read content
+            content = Path(temp_path).read_text()
+
+            # Check tabs are used
+            assert '\t' in content
+            # Check fields are quoted
+            assert '"Method"' in content
+            assert '"Path"' in content
+
+        finally:
+            Path(temp_path).unlink()
