@@ -1,5 +1,9 @@
 # fizgig-api-extractor
 
+[![Tests](https://github.com/IAmNotAGelfling/fizgig-api-extractor/actions/workflows/test.yml/badge.svg)](https://github.com/IAmNotAGelfling/fizgig-api-extractor/actions/workflows/test.yml)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Parse Postman collections and OpenAPI specifications, extract API endpoints, and export them in multiple formats.
 
 ## Features
