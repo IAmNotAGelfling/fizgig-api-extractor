@@ -277,3 +277,96 @@ class TestExportHtml:
 
         finally:
             Path(temp_path).unlink()
+
+
+class TestFieldMappingIntegration:
+    """Tests for field mapping in CSV and JSON exports."""
+
+    def test_csv_export_with_field_mapping(self, sample_endpoints):
+        """Test CSV export with custom field mapping."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            temp_path = f.name
+
+        try:
+            field_map = {
+                "method": "HTTP Method",
+                "path": "Endpoint",
+                "name": "Name"
+            }
+            export_csv(sample_endpoints, temp_path, field_map=field_map)
+
+            # Read CSV
+            import csv
+            with open(temp_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+
+            # Check headers
+            assert len(rows) > 0
+            assert "HTTP Method" in rows[0]
+            assert "Endpoint" in rows[0]
+            assert "Name" in rows[0]
+            # Old fields should not be present
+            assert "method" not in rows[0]
+            assert "group" not in rows[0]
+
+            # Check data
+            assert rows[0]["HTTP Method"] == "GET"
+            assert rows[0]["Endpoint"] == "/api/users"
+            assert rows[0]["Name"] == "List users"
+
+        finally:
+            Path(temp_path).unlink()
+
+    def test_json_export_with_field_mapping(self, sample_endpoints):
+        """Test JSON export with custom field mapping."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            temp_path = f.name
+
+        try:
+            field_map = {
+                "method": "HTTP Method",
+                "path": "Endpoint"
+            }
+            export_json(sample_endpoints, temp_path, field_map=field_map)
+
+            # Read JSON
+            with open(temp_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            # Check data
+            assert len(data) > 0
+            assert "HTTP Method" in data[0]
+            assert "Endpoint" in data[0]
+            # Old fields should not be present
+            assert "method" not in data[0]
+            assert "group" not in data[0]
+
+            # Check values
+            assert data[0]["HTTP Method"] == "GET"
+            assert data[0]["Endpoint"] == "/api/users"
+
+        finally:
+            Path(temp_path).unlink()
+
+    def test_csv_export_without_field_mapping(self, sample_endpoints):
+        """Test CSV export still works without field mapping."""
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False) as f:
+            temp_path = f.name
+
+        try:
+            export_csv(sample_endpoints, temp_path)
+
+            # Read CSV
+            import csv
+            with open(temp_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+
+            # Check default headers are present
+            assert "Group" in rows[0]
+            assert "Method" in rows[0]
+            assert "Path" in rows[0]
+
+        finally:
+            Path(temp_path).unlink()

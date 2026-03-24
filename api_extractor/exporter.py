@@ -168,17 +168,43 @@ def export_markdown(endpoints: List[Dict[str, Any]], output_path: str) -> None:
         f.writelines(lines)
 
 
-def export_csv(endpoints: List[Dict[str, Any]], output_path: str) -> None:
+def export_csv(endpoints: List[Dict[str, Any]], output_path: str,
+               field_map: Dict[str, str] = None) -> None:
     """
     Export endpoints to CSV format.
 
     Args:
         endpoints: List of endpoint dictionaries
         output_path: Output file path
+        field_map: Optional field mapping for custom field selection/renaming
 
     Example:
         >>> export_csv(endpoints, "api_endpoints.csv")
+        >>> export_csv(endpoints, "api.csv", {"method": "HTTP Method", "path": "Endpoint"})
     """
+    from api_extractor.field_mapper import apply_field_mapping
+
+    # Apply field mapping if provided
+    if field_map:
+        endpoints = apply_field_mapping(endpoints, field_map)
+
+        # Export mapped fields
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(output_file, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+
+            # Write header from mapped field names
+            writer.writerow(list(field_map.values()))
+
+            # Write data
+            for endpoint in endpoints:
+                writer.writerow(list(endpoint.values()))
+
+        return
+
+    # Default behavior (no field mapping)
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -234,7 +260,8 @@ def export_csv(endpoints: List[Dict[str, Any]], output_path: str) -> None:
             ])
 
 
-def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool = True, plain_text: bool = False) -> None:
+def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool = True,
+                plain_text: bool = False, field_map: Dict[str, str] = None) -> None:
     """
     Export endpoints to JSON format.
 
@@ -243,16 +270,24 @@ def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool 
         output_path: Output file path
         pretty: Whether to pretty-print JSON (default: True)
         plain_text: Whether to convert markdown descriptions to plain text (default: False)
+        field_map: Optional field mapping for custom field selection/renaming
 
     Example:
         >>> export_json(endpoints, "api_endpoints.json")
         >>> export_json(endpoints, "api_endpoints.json", plain_text=True)
+        >>> export_json(endpoints, "api.json", field_map={"method": "HTTP Method"})
     """
+    from api_extractor.field_mapper import apply_field_mapping
+
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
+    # Apply field mapping if provided
+    if field_map:
+        endpoints = apply_field_mapping(endpoints, field_map)
+
     # If plain_text is requested, strip markdown from descriptions
-    if plain_text:
+    if plain_text and not field_map:  # Only strip if not using custom fields
         endpoints = [
             {
                 **endpoint,
