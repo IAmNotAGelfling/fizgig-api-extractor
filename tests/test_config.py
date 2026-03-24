@@ -334,3 +334,241 @@ class TestValidateConfigDeep:
             # Assert
             assert result["valid"] is True
             assert len(result["errors"]) == 0
+
+
+class TestRunExports:
+    """Tests for run_exports function."""
+
+    def test_run_exports_with_markdown(self):
+        """Test running exports with markdown format."""
+        # Arrange
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            
+            # Create input file
+            input_file = tmpdir_path / "input.json"
+            input_file.write_text(json.dumps({
+                "openapi": "3.0.0",
+                "info": {"title": "Test", "version": "1.0"},
+                "paths": {
+                    "/test": {
+                        "get": {
+                            "summary": "Test endpoint",
+                            "responses": {"200": {"description": "OK"}}
+                        }
+                    }
+                }
+            }))
+            
+            # Create config
+            config_file = tmpdir_path / "config.json"
+            config_file.write_text(json.dumps({
+                "input": str(input_file),
+                "exports": [
+                    {
+                        "format": "markdown",
+                        "output": str(tmpdir_path / "output.md")
+                    }
+                ]
+            }))
+            
+            # Act
+            from api_extractor.config import run_exports_from_config as run_exports
+            run_exports(str(config_file))
+            
+            # Assert
+            assert (tmpdir_path / "output.md").exists()
+            content = (tmpdir_path / "output.md").read_text()
+            assert "# API Endpoints" in content
+            assert "Test endpoint" in content
+
+    def test_run_exports_with_csv(self):
+        """Test running exports with CSV format."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            
+            input_file = tmpdir_path / "input.json"
+            input_file.write_text(json.dumps({
+                "openapi": "3.0.0",
+                "info": {"title": "Test", "version": "1.0"},
+                "paths": {
+                    "/test": {
+                        "get": {
+                            "summary": "Test",
+                            "responses": {"200": {"description": "OK"}}
+                        }
+                    }
+                }
+            }))
+            
+            config_file = tmpdir_path / "config.json"
+            config_file.write_text(json.dumps({
+                "input": str(input_file),
+                "exports": [{"format": "csv", "output": str(tmpdir_path / "output.csv")}]
+            }))
+            
+            from api_extractor.config import run_exports_from_config as run_exports
+            run_exports(str(config_file))
+            
+            assert (tmpdir_path / "output.csv").exists()
+
+    def test_run_exports_with_json(self):
+        """Test running exports with JSON format."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            
+            input_file = tmpdir_path / "input.json"
+            input_file.write_text(json.dumps({
+                "openapi": "3.0.0",
+                "info": {"title": "Test", "version": "1.0"},
+                "paths": {
+                    "/test": {
+                        "get": {
+                            "summary": "Test",
+                            "responses": {"200": {"description": "OK"}}
+                        }
+                    }
+                }
+            }))
+            
+            config_file = tmpdir_path / "config.json"
+            config_file.write_text(json.dumps({
+                "input": str(input_file),
+                "exports": [{"format": "json", "output": str(tmpdir_path / "output.json")}]
+            }))
+            
+            from api_extractor.config import run_exports_from_config as run_exports
+            run_exports(str(config_file))
+            
+            assert (tmpdir_path / "output.json").exists()
+            with open(tmpdir_path / "output.json") as f:
+                data = json.load(f)
+            assert isinstance(data, list)
+
+    def test_run_exports_with_html(self):
+        """Test running exports with HTML format."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            
+            input_file = tmpdir_path / "input.json"
+            input_file.write_text(json.dumps({
+                "openapi": "3.0.0",
+                "info": {"title": "Test", "version": "1.0"},
+                "paths": {
+                    "/test": {
+                        "get": {
+                            "summary": "Test",
+                            "responses": {"200": {"description": "OK"}}
+                        }
+                    }
+                }
+            }))
+            
+            config_file = tmpdir_path / "config.json"
+            config_file.write_text(json.dumps({
+                "input": str(input_file),
+                "exports": [{"format": "html", "output": str(tmpdir_path / "output.html")}]
+            }))
+            
+            from api_extractor.config import run_exports_from_config as run_exports
+            run_exports(str(config_file))
+            
+            assert (tmpdir_path / "output.html").exists()
+            content = (tmpdir_path / "output.html").read_text()
+            assert "<!DOCTYPE html>" in content
+
+    def test_run_exports_with_field_mapping(self):
+        """Test running exports with field mapping."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            
+            input_file = tmpdir_path / "input.json"
+            input_file.write_text(json.dumps({
+                "openapi": "3.0.0",
+                "info": {"title": "Test", "version": "1.0"},
+                "paths": {
+                    "/test": {
+                        "get": {
+                            "summary": "Test",
+                            "responses": {"200": {"description": "OK"}}
+                        }
+                    }
+                }
+            }))
+            
+            config_file = tmpdir_path / "config.json"
+            config_file.write_text(json.dumps({
+                "input": str(input_file),
+                "exports": [{
+                    "format": "json",
+                    "output": str(tmpdir_path / "output.json"),
+                    "fields": {"method": "http_method", "path": "url"}
+                }]
+            }))
+            
+            from api_extractor.config import run_exports_from_config as run_exports
+            run_exports(str(config_file))
+            
+            with open(tmpdir_path / "output.json") as f:
+                data = json.load(f)
+            assert "http_method" in data[0]
+            assert "url" in data[0]
+
+    def test_run_exports_with_cli_overrides(self):
+        """Test running exports with CLI overrides."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            
+            input_file = tmpdir_path / "input.json"
+            input_file.write_text(json.dumps({
+                "openapi": "3.0.0",
+                "info": {"title": "Test", "version": "1.0"},
+                "paths": {
+                    "/test": {
+                        "get": {
+                            "summary": "Test",
+                            "responses": {"200": {"description": "OK"}}
+                        }
+                    }
+                }
+            }))
+            
+            override_output = tmpdir_path / "override.md"
+            
+            config_file = tmpdir_path / "config.json"
+            config_file.write_text(json.dumps({
+                "input": str(input_file),
+                "exports": [{
+                    "format": "markdown",
+                    "output": str(tmpdir_path / "original.md")
+                }]
+            }))
+            
+            from api_extractor.config import run_exports_from_config as run_exports
+            run_exports(str(config_file), cli_overrides={
+                "output": str(override_output),
+                "format": "markdown"
+            })
+            
+            # CLI override should change first export
+            assert override_output.exists()
+
+    def test_validate_exports_not_list(self):
+        """Test validation fails when exports is not a list."""
+        config = {
+            "input": "test.json",
+            "exports": "not a list"
+        }
+        
+        with pytest.raises(ConfigError, match="'exports' must be an array"):
+            validate_config(config)
+
+    def test_validate_export_not_dict(self):
+        """Test validation fails when export item is not a dict."""
+        config = {
+            "input": "test.json",
+            "exports": ["not a dict"]
+        }
+        
+        with pytest.raises(ConfigError, match=r"exports\[0\]: must be a dictionary"):
+            validate_config(config)

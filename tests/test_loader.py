@@ -301,3 +301,110 @@ class TestLoadFromUrl:
             with open(save_path, 'r') as f:
                 saved_data = json.load(f)
                 assert saved_data["openapi"] == "3.0.0"
+
+
+class TestLoaderErrorPaths:
+    """Test error handling paths in loader."""
+
+    def test_load_json_file_not_found(self):
+        """Test load_json with non-existent file."""
+        # Act & Assert
+        with pytest.raises(FileNotFoundError, match="File not found"):
+            load_json(Path("/nonexistent/path/file.json"))
+
+    def test_load_yaml_file_not_found(self):
+        """Test load_yaml with non-existent file."""
+        # Act & Assert
+        with pytest.raises(FileNotFoundError, match="File not found"):
+            load_yaml(Path("/nonexistent/path/file.yaml"))
+
+    def test_load_api_file_unknown_extension_both_fail(self):
+        """Test loading file with unknown extension where both JSON and YAML parsing fail."""
+        # Arrange - file with .txt extension containing invalid JSON/YAML
+        # Use content that will fail JSON parse and YAML parse
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+            # Write binary-like content that will fail both parsers
+            f.write('\x00\x01\x02 invalid binary content')
+            temp_path = f.name
+        
+        try:
+            # Act & Assert
+            with pytest.raises(ValueError, match="Could not parse .* as JSON or YAML"):
+                load_api_file(temp_path)
+        finally:
+            Path(temp_path).unlink()
+
+    def test_load_api_file_unknown_extension_yaml_success(self):
+        """Test loading file with unknown extension that's valid YAML."""
+        # Arrange - file with .txt extension containing valid YAML
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+            f.write('openapi: "3.0.0"\ninfo:\n  title: Test\npaths: {}')
+            temp_path = f.name
+        
+        try:
+            # Act
+            data, format_type = load_api_file(temp_path)
+            
+            # Assert
+            assert format_type == "openapi"
+            assert data["openapi"] == "3.0.0"
+        finally:
+            Path(temp_path).unlink()
+
+    def test_load_api_file_unknown_format_detected(self):
+        """Test load_api_file with data that can't be classified."""
+        # Arrange - valid JSON but not Postman or OpenAPI
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+            json.dump({"random": "data", "not": "api spec"}, f)
+            temp_path = f.name
+        
+        try:
+            # Act & Assert
+            with pytest.raises(ValueError, match="Could not detect format"):
+                load_api_file(temp_path)
+        finally:
+            Path(temp_path).unlink()
+
+    def test_validate_openapi_spec_missing_info(self):
+        """Test OpenAPI validation with missing info section."""
+        # Arrange
+        spec = {
+            "openapi": "3.0.0",
+            # missing "info"
+            "paths": {}
+        }
+        
+        # Act & Assert
+        assert not validate_openapi_spec(spec)
+
+    def test_validate_openapi_spec_missing_paths(self):
+        """Test OpenAPI validation with missing paths section."""
+        # Arrange
+        spec = {
+            "openapi": "3.0.0",
+            "info": {"title": "Test", "version": "1.0.0"}
+            # missing "paths"
+        }
+        
+        # Act & Assert
+        assert not validate_openapi_spec(spec)
+
+    def test_validate_openapi_spec_not_dict(self):
+        """Test OpenAPI validation with non-dict input."""
+        # Arrange
+        spec = ["not", "a", "dict"]
+        
+        # Act & Assert
+        assert not validate_openapi_spec(spec)
+
+    def test_validate_openapi_spec_wrong_version(self):
+        """Test OpenAPI validation with wrong version."""
+        # Arrange
+        spec = {
+            "openapi": "2.0",  # Not 3.x
+            "info": {"title": "Test"},
+            "paths": {}
+        }
+        
+        # Act & Assert
+        assert not validate_openapi_spec(spec)
