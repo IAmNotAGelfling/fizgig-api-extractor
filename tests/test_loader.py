@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+import responses
 
 from api_extractor.loader import (
     detect_format,
@@ -217,3 +218,86 @@ class TestValidateOpenapiSpec:
         """Test validation fails without paths."""
         data = {"openapi": "3.0.3", "info": {"title": "Test"}}
         assert validate_openapi_spec(data) is False
+
+
+class TestLoadFromUrl:
+    """Tests for loading API specs from URLs."""
+
+    @responses.activate
+    def test_load_openapi_from_url(self):
+        """Test loading OpenAPI spec from URL."""
+        # Arrange
+        url = "https://api.example.com/openapi.json"
+        spec = {
+            "openapi": "3.0.0",
+            "info": {"title": "Test API", "version": "1.0.0"},
+            "paths": {}
+        }
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        # Act
+        data, format_type = load_api_file(url)
+
+        # Assert
+        assert format_type == "openapi"
+        assert data["openapi"] == "3.0.0"
+
+    @responses.activate
+    def test_load_postman_from_url(self):
+        """Test loading Postman collection from URL."""
+        # Arrange
+        url = "https://api.example.com/collection.json"
+        collection = {
+            "info": {
+                "name": "Test Collection",
+                "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+            },
+            "item": []
+        }
+        responses.add(responses.GET, url, json=collection, status=200)
+
+        # Act
+        data, format_type = load_api_file(url)
+
+        # Assert
+        assert format_type == "postman"
+        assert data["info"]["name"] == "Test Collection"
+
+    @responses.activate
+    def test_load_url_with_headers(self):
+        """Test loading from URL with custom headers."""
+        # Arrange
+        url = "https://api.example.com/spec.json"
+        headers = {"Authorization": "Bearer token123"}
+        spec = {"openapi": "3.0.0", "info": {}, "paths": {}}
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        # Act
+        data, format_type = load_api_file(url, headers=headers)
+
+        # Assert
+        assert format_type == "openapi"
+        assert len(responses.calls) == 1
+        request_headers = responses.calls[0].request.headers
+        assert request_headers["Authorization"] == "Bearer token123"
+
+    @responses.activate
+    def test_load_url_with_save(self):
+        """Test loading from URL with save functionality."""
+        # Arrange
+        url = "https://api.example.com/spec.json"
+        spec = {"openapi": "3.0.0", "info": {}, "paths": {}}
+        responses.add(responses.GET, url, json=spec, status=200)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            save_path = str(Path(tmpdir) / "saved.json")
+
+            # Act
+            data, format_type = load_api_file(url, save_path=save_path)
+
+            # Assert
+            assert format_type == "openapi"
+            assert Path(save_path).exists()
+            with open(save_path, 'r') as f:
+                saved_data = json.load(f)
+                assert saved_data["openapi"] == "3.0.0"

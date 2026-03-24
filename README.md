@@ -8,6 +8,8 @@ Parse Postman collections and OpenAPI specifications, extract API endpoints, and
   - Postman v2.1 collections (JSON)
   - OpenAPI 3.x specifications (JSON and YAML)
   - Automatic format detection
+  - **Load from URLs** with optional authentication headers
+  - Local file paths and remote HTTP(S) endpoints
 
 - **Extract comprehensive endpoint information**
   - HTTP methods (GET, POST, PUT, DELETE, etc.)
@@ -18,9 +20,22 @@ Parse Postman collections and OpenAPI specifications, extract API endpoints, and
 
 - **Export to multiple formats**
   - **Markdown** - Human-readable documentation
-  - **CSV** - Spreadsheet-compatible format (markdown converted to plain text)
+  - **CSV** - Spreadsheet-compatible format with custom delimiters and quoting
   - **JSON** - Machine-readable structured data (with optional plain text conversion)
-  - **HTML** - Styled web page with interactive display
+  - **HTML** - Styled web page with Mustache templating support
+  - **Custom field mapping** - Select, rename, and reorder fields in CSV and JSON exports
+
+- **Batch processing with config files**
+  - JSON configuration for multiple exports from single input
+  - Auto-discovery of `.fizgig-config.json`
+  - CLI overrides for config values
+  - Validation command for config files
+
+- **HTML templating**
+  - Mustache/Handlebars template support
+  - Custom CSS styling
+  - Default template included
+  - Export template via `init` command
 
 - **Convert between formats**
   - OpenAPI → Postman collection converter
@@ -77,7 +92,66 @@ fizgig-api-extractor extract collection.json -o endpoints.json -f json --plain-t
 
 # Export to HTML
 fizgig-api-extractor extract api.yaml -o endpoints.html -f html
+
+# Export to HTML with custom template
+fizgig-api-extractor extract api.yaml -o endpoints.html -f html --template custom.html
 ```
+
+#### Fetch from URLs
+
+Load API specifications directly from URLs:
+
+```bash
+# Fetch from URL
+fizgig-api-extractor extract https://api.example.com/openapi.yaml
+
+# Fetch with authentication header
+fizgig-api-extractor extract https://api.example.com/spec.json \
+  --header "Authorization: Bearer token123"
+
+# Fetch with multiple headers
+fizgig-api-extractor extract https://api.example.com/spec.json \
+  --header "Authorization: Bearer token123" \
+  --header "X-API-Version: v2"
+
+# Fetch and save locally
+fizgig-api-extractor extract https://api.example.com/openapi.yaml --save-url
+fizgig-api-extractor extract https://api.example.com/spec --save-url custom.json
+```
+
+#### Configuration Files
+
+Use configuration files for batch processing and repeated exports:
+
+```bash
+# Initialize with example config and template
+fizgig-api-extractor init
+
+# Only create config file
+fizgig-api-extractor init --config-only
+
+# Only create template
+fizgig-api-extractor init --template-only
+
+# Create in custom directory
+fizgig-api-extractor init --output-dir ./my-project
+
+# Run exports from config file
+fizgig-api-extractor extract --config .fizgig-config.json
+
+# Run with CLI overrides
+fizgig-api-extractor extract --config myconfig.json \
+  --header "Authorization: Bearer token" \
+  -o custom-output.html
+
+# Validate config file without running exports
+fizgig-api-extractor validate-config .fizgig-config.json
+
+# Auto-discover and validate config
+fizgig-api-extractor validate-config
+```
+
+See [CONFIG.md](docs/CONFIG.md) for detailed configuration documentation.
 
 #### Tree View
 
@@ -112,6 +186,48 @@ fizgig-api-extractor extract api.json -o endpoints.json -f json --plain-text
 ```
 
 **Note:** CSV format always outputs plain text descriptions by default.
+
+#### Field Mapping
+
+Customize output field names and selection for CSV and JSON exports using configuration files:
+
+```json
+{
+  "input": "api.json",
+  "exports": [
+    {
+      "format": "csv",
+      "output": "endpoints.csv",
+      "fields": {
+        "method": "HTTP Method",
+        "path": "Endpoint",
+        "description": "Description"
+      },
+      "delimiter": ",",
+      "quoting": "minimal"
+    },
+    {
+      "format": "json",
+      "output": "endpoints.json",
+      "fields": {
+        "name": "endpoint_name",
+        "method": "http_method",
+        "path": "url_path",
+        "metadata.deprecated": "is_deprecated"
+      },
+      "plain_text": false
+    }
+  ]
+}
+```
+
+Field mapping supports:
+- **Field selection** - Only export specified fields
+- **Field renaming** - Custom output names
+- **Nested field access** - Use dot notation (e.g., `metadata.deprecated`)
+- **CSV customization** - Delimiters (`,`, `;`, `\t`) and quoting modes (`minimal`, `all`, `nonnumeric`, `none`)
+
+See [CONFIG.md](docs/CONFIG.md) for detailed examples.
 
 ### Python API
 
@@ -267,6 +383,8 @@ Each parsed endpoint contains:
 - rich >= 13.0.0
 - pyyaml >= 6.0
 - mistune >= 3.0.0
+- requests >= 2.31.0
+- chevron >= 0.14.0
 
 ## License
 

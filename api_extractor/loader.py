@@ -100,15 +100,19 @@ def load_yaml(file_path: Path) -> Dict[str, Any]:
         raise ValueError(f"Error reading {file_path}: {e}")
 
 
-def load_api_file(file_path: str) -> Tuple[Dict[str, Any], FormatType]:
+def load_api_file(file_path: str, headers: Dict[str, str] = None,
+                  save_path: str = None) -> Tuple[Dict[str, Any], FormatType]:
     """
-    Load an API specification file and detect its format.
+    Load an API specification file or URL and detect its format.
 
-    Automatically detects whether the file is JSON or YAML based on extension,
-    then detects whether it's a Postman collection or OpenAPI spec.
+    Automatically detects whether the input is a URL or local file.
+    For files, detects JSON or YAML based on extension.
+    Then detects whether it's a Postman collection or OpenAPI spec.
 
     Args:
-        file_path: Path to the API specification file
+        file_path: Path to API specification file or HTTP(S) URL
+        headers: Optional HTTP headers for URL requests
+        save_path: Optional path to save URL content to local file
 
     Returns:
         Tuple of (parsed_data, format_type)
@@ -121,7 +125,16 @@ def load_api_file(file_path: str) -> Tuple[Dict[str, Any], FormatType]:
         >>> data, fmt = load_api_file("api.json")
         >>> print(f"Detected format: {fmt}")
         Detected format: openapi
+        >>> data, fmt = load_api_file("https://api.example.com/openapi.yaml")
+        >>> print(f"Detected format: {fmt}")
+        Detected format: openapi
     """
+    # Check if input is a URL
+    if file_path.startswith('http://') or file_path.startswith('https://'):
+        from api_extractor.fetcher import load_from_url
+        return load_from_url(file_path, headers, save_path)
+
+    # Otherwise, load from local file
     path = Path(file_path)
 
     if not path.exists():
