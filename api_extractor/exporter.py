@@ -7,7 +7,7 @@ Exports parsed endpoints to multiple formats: Markdown, CSV, JSON, HTML.
 import json
 import csv
 import re
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 import mistune
@@ -324,16 +324,53 @@ def export_json(endpoints: List[Dict[str, Any]], output_path: str, pretty: bool 
             json.dump(endpoints, f, ensure_ascii=False)
 
 
-def export_html(endpoints: List[Dict[str, Any]], output_path: str) -> None:
+def export_html(endpoints: List[Dict[str, Any]], output_path: str,
+                template_path: Optional[str] = None,
+                config_dir: Optional[Path] = None) -> None:
     """
-    Export endpoints to HTML format.
+    Export endpoints to HTML format using template.
 
     Args:
         endpoints: List of endpoint dictionaries
         output_path: Output file path
+        template_path: Optional custom template path
+        config_dir: Config directory for template resolution
 
     Example:
         >>> export_html(endpoints, "api_endpoints.html")
+        >>> export_html(endpoints, "api.html", template_path="custom.html")
+    """
+    from api_extractor.templating import render_html_template
+
+    # Extract source info from output path
+    source_file = Path(output_path).stem
+
+    # Render HTML using template
+    html = render_html_template(
+        endpoints=endpoints,
+        source_file=source_file,
+        source_format="unknown",
+        template_path=template_path,
+        config_dir=config_dir
+    )
+
+    # Write to file
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(html)
+
+
+def export_html_legacy(endpoints: List[Dict[str, Any]], output_path: str) -> None:
+    """
+    LEGACY: Export endpoints to HTML format (hardcoded version).
+
+    Kept for reference. New code should use export_html() which uses templates.
+
+    Args:
+        endpoints: List of endpoint dictionaries
+        output_path: Output file path
     """
     # Group endpoints by category
     grouped = group_by_tag(endpoints, "group")
